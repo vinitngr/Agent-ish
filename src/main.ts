@@ -1,11 +1,13 @@
 import { Agent } from './agent/core/Agent';
 import { CorePlugin } from './plugins/CorePlugin';
-import { TerminalPlugin } from './plugins/TerminalPlugin';
+// import { TerminalPlugin } from './plugins/TerminalPlugin';
 import { SocketPlugin } from './plugins/SocketPlugin';
 import { McpPlugin } from './plugins/McpPlugin';
 import { logger } from './utils/logger';
 import { LLMPlugin } from './plugins/LLMPlugin';
 import minimist from 'minimist';
+import { SlashCommandPlugin } from './plugins/SlashCommandPlugin';
+import { ShellCommandPlugin } from './plugins/ShellCommandPlugin';
 
 const log = logger.child('main');
 async function main(): Promise<void> {
@@ -16,6 +18,8 @@ async function main(): Promise<void> {
   await agent.use(new McpPlugin());
   // await agent.use(new TerminalPlugin());
   await agent.use(new SocketPlugin());
+  await agent.use(new SlashCommandPlugin());
+  await agent.use(new ShellCommandPlugin({ allowedInterfaces: ['socket'] }));
   
   await agent.loadPluginsFrom('./custom_plugins', { monitoring: true });
   

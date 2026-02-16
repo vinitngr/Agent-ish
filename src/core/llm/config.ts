@@ -8,6 +8,8 @@ export interface ProviderConfig {
 }
 
 export interface AppLLMConfig {
+  defaultModel?: string;
+  fallbackModels?: string[];
   providers: ProviderConfig[];
 }
 

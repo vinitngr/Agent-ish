@@ -145,8 +145,28 @@ export class LLMService {
     return models.filter(m => m.providerId === providerId);
   }
 
+  async getDefaultModelId(): Promise<string | undefined> {
+    const config = await this.configStore.loadConfig();
+    return config.defaultModel;
+  }
+
+  async getFallbackModelIds(): Promise<string[]> {
+    const config = await this.configStore.loadConfig();
+    return config.fallbackModels || [];
+  }
+
   async getDefaultModel(): Promise<ModelConfig | undefined> {
+    const configDefaultId = await this.getDefaultModelId();
     const models = await this.listAllModels();
+    
+    if (configDefaultId) {
+      const parts = configDefaultId.split(':');
+      const providerId = parts[0];
+      const modelId = parts.length > 1 ? parts[1] : parts[0];
+      const found = models.find(m => m.providerId === providerId && m.id === modelId);
+      if (found) return found;
+    }
+
     return models.length > 0 ? models[0] : undefined;
   }
 

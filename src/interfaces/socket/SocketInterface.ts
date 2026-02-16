@@ -50,7 +50,7 @@ export class SocketInterface {
 
       try {
         log.info(`Received command: ${input}`);
-        const result = await this.agent.execute(input);
+        const result = await this.agent.execute(input, { interface: 'socket' });
         socket.write(result + '\n\n');
       } catch (error) {
         socket.write(`Error: ${(error as Error).message}\n`);

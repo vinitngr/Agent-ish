@@ -1,8 +1,8 @@
-import { Agent } from './src/agent/core/Agent';
-import { CorePlugin } from './src/plugins/CorePlugin';
-import { LLMPlugin } from './src/plugins/LLMPlugin';
-import { IPlanner, PlanResult } from './src/agent/orchestrator/Planner';
-import { Session } from './src/agent/runtime/Session';
+import { Agent } from '../src/agent/core/Agent';
+import { CorePlugin } from '../src/plugins/CorePlugin';
+import { LLMPlugin } from '../src/plugins/LLMPlugin';
+import { IPlanner, PlanResult } from '../src/agent/orchestrator/Planner';
+import { Session } from '../src/agent/runtime/Session';
 class MyCustomPlanner implements IPlanner {
   async plan(session: Session): Promise<PlanResult> {
     const history = session.getHistory();

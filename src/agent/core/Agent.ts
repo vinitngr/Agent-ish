@@ -70,8 +70,8 @@ export class Agent {
     const absolutePath = path.resolve(process.cwd(), directory);
 
     if (!fs.existsSync(absolutePath)) {
-      log.warn(`Plugin directory not found: ${absolutePath}`);
-      return;
+      log.info(`Creating plugin directory: ${absolutePath}`);
+      fs.mkdirSync(absolutePath, { recursive: true });
     }
 
     const load = async (pluginPath: string) => {
@@ -107,6 +107,9 @@ export class Agent {
         depth: 0 
       }).on('add', async (filePath) => {
         log.info(`New plugin detected: ${filePath}`);
+        await load(filePath);
+      }).on('change', async (filePath) => {
+        log.info(`Plugin change detected: ${filePath}`);
         await load(filePath);
       }).on('addDir', async (dirPath) => {
         log.info(`New plugin directory detected: ${dirPath}`);
@@ -174,14 +177,30 @@ export class Agent {
     });
   }
 
-  async handleInput(input: string): Promise<string> {
-    if (!this.orchestrator) throw new Error('Agent not booted');
-    return this.orchestrator.handleInput(input);
+  private inputInterceptors: Array<(input: string, options?: any) => Promise<string | null>> = [];
+
+  addInputInterceptor(fn: (input: string, options?: any) => Promise<string | null>): void {
+    this.inputInterceptors.push(fn);
   }
 
-  async execute(input: string, options?: { model?: string }): Promise<string> {
+  async handleInput(input: string): Promise<string> {
+    if (!this.orchestrator) throw new Error('Agent not booted');
+    return this.processInput(input);
+  }
+
+  async execute(input: string, options?: { model?: string; [key: string]: any }): Promise<string> {
     if (!this.orchestrator) await this.boot();
    
+    return this.processInput(input, options);
+  }
+
+  private async processInput(input: string, options?: any): Promise<string> {
+    for (const interceptor of this.inputInterceptors) {
+      const result = await interceptor(input, options);
+      if (result !== null) {
+        return result;
+      }
+    }
     return this.orchestrator.handleInput(input, options);
   }
 
