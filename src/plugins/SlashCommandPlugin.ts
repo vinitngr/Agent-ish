@@ -40,14 +40,14 @@ export class SlashCommandPlugin implements IPlugin {
   
   private registerCommands() {
     this.addCommand('help', async () => {
-      const cmds = this.listCommands().map(c => `/${c}`).join(', ');
+      const cmds = this.listCommands().sort().map(c => `/${c}`).join(', ');
       return `Available commands: ${cmds}`;
     });
 
-    this.addCommand('reset', async (_args, { agent }) => {
+    this.addCommand('reset', async (_args, { agent, options }) => {
       const orchestrator = (agent as any).orchestrator;
       if (orchestrator) {
-          const sessionId = (agent as any).context.sessionId;
+          const sessionId = options?.sessionId || (agent as any).context.sessionId;
           const sessions = (orchestrator as any).sessions;
           if (sessions && sessions.has(sessionId)) {
               const session = sessions.get(sessionId);
@@ -60,8 +60,30 @@ export class SlashCommandPlugin implements IPlugin {
       return 'Session cleared.';
     });
 
-    this.addCommand('new', async (args, context) => {
-        return this.commands.get('reset')!(args, context);
+    this.addCommand('new', async (_args, { options }) => {
+        const newId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        if (options) {
+            options.newSessionId = newId;
+        }
+        return `New session created: ${newId}`;
+    });
+
+    this.addCommand('sessions', async (_args, { agent }) => {
+        const orchestrator = (agent as any).orchestrator;
+        if (orchestrator && typeof (orchestrator as any).listSessions === 'function') {
+            const sessions = await orchestrator.listSessions();
+            return `Active sessions:\n${sessions.map((id: string) => `- ${id}`).join('\n')}`;
+        }
+        return 'Could not list sessions.';
+    });
+
+    this.addCommand('load', async (args, { options }) => {
+        if (args.length === 0) return 'Usage: /load <session_id>';
+        const targetId = args[0];
+        if (options) {
+            options.newSessionId = targetId;
+        }
+        return `Switched to session: ${targetId}`;
     });
 
     this.addCommand('model', async (args, { agent }) => {

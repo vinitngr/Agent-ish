@@ -6,21 +6,21 @@ import { AgentController } from './AgentController';
 import { ToolExecutor } from './ToolExecutor';
 import { IPlanner } from './Planner';
 import { DATAULT_AGENT_CONFIG } from '../../types/AgentConfig';
+import { ISessionStore } from '../runtime/SessionStore';
 
 const log = logger.child('orchestrator');
 
 export class Orchestrator {
   private context: Context;
   private eventBus: EventBus<AgentEvents>;
-  private sessions: Map<string, Session> = new Map();
-  
   private controller: AgentController;
 
   constructor(
     context: Context, 
     eventBus: EventBus<AgentEvents>,
     planner: IPlanner,
-    toolExecutor: ToolExecutor
+    toolExecutor: ToolExecutor,
+    private sessionStore: ISessionStore
   ) {
     this.context = context;
     this.eventBus = eventBus;
@@ -40,8 +40,8 @@ export class Orchestrator {
     this.controller.setPlanner(planner);
   }
 
-  async handleInput(input: string, options?: { model?: string }): Promise<string> {
-    const session = this.getOrCreateSession();
+  async handleInput(input: string, options?: { model?: string; sessionId?: string }): Promise<string> {
+    const session = await this.getOrCreateSession(options?.sessionId);
     
     if (options?.model) {
       session.metadata.model = options.model;
@@ -50,11 +50,19 @@ export class Orchestrator {
     return this.controller.run(session, input);
   }
 
-  private getOrCreateSession(): Session {
-    const id = this.context.sessionId;
-    if (!this.sessions.has(id)) {
-      this.sessions.set(id, new Session(id));
+  private async getOrCreateSession(explicitId?: string): Promise<Session> {
+    const id = explicitId || this.context.sessionId;
+    let session = await this.sessionStore.get(id);
+    
+    if (!session) {
+      session = new Session(id);
+      await this.sessionStore.set(id, session);
     }
-    return this.sessions.get(id)!;
+    
+    return session;
+  }
+
+  async listSessions(): Promise<string[]> {
+    return this.sessionStore.list();
   }
 }

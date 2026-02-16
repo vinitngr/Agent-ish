@@ -37,6 +37,8 @@ export class SocketInterface {
     log.info('New client connected');
     this.clients.add(socket);
 
+    let socketSessionId: string | undefined;
+
     socket.write('Welcome to Agent-ish Daemon! Type your request.\n');
 
     socket.on('data', async (data) => {
@@ -50,7 +52,18 @@ export class SocketInterface {
 
       try {
         log.info(`Received command: ${input}`);
-        const result = await this.agent.execute(input, { interface: 'socket' });
+        const options: any = { 
+          interface: 'socket', 
+          sessionId: socketSessionId 
+        };
+        const result = await this.agent.execute(input, options);
+        
+        if (options.newSessionId) {
+          socketSessionId = options.newSessionId;
+          socket.write(`[SESSION] Switched to: ${socketSessionId}\n`);
+          log.info(`Socket connection switched to session: ${socketSessionId}`);
+        }
+
         socket.write(result + '\n\n');
       } catch (error) {
         socket.write(`Error: ${(error as Error).message}\n`);

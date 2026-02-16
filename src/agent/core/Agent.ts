@@ -14,6 +14,7 @@ import { Orchestrator } from '../orchestrator/Orchestrator';
 import { LLMPlanner } from '../orchestrator/LLMPlanner';
 import { ToolExecutor } from '../orchestrator/ToolExecutor';
 import { IPlanner } from '../orchestrator/Planner';
+import { ISessionStore, MemorySessionStore } from '../runtime/SessionStore';
 import { DATAULT_AGENT_CONFIG } from '../../types/AgentConfig';
 import { ToolCall } from '../../types/Provider';
 
@@ -33,6 +34,7 @@ export class Agent {
   private context!: Context;
   private orchestrator!: Orchestrator;
   private customPlanner: IPlanner | null = null;
+  private sessionStore: ISessionStore;
   private middlewares: Array<(call: ToolCall) => boolean | Promise<boolean>> = [];
 
   constructor(private configDir: string) {
@@ -46,6 +48,7 @@ export class Agent {
     this.providers = new ProviderRegistry(this.eventBus);
     this.interfaces = new InterfaceRegistry(this.eventBus);
     this.pluginRegistry = new PluginRegistry(this, this.eventBus);
+    this.sessionStore = new MemorySessionStore();
   }
 
   get config(): AgentConfig {
@@ -58,6 +61,11 @@ export class Agent {
       this.orchestrator.setPlanner(planner);
     }
     log.info(`Planner set to: ${planner.constructor.name}`);
+  }
+
+  setSessionStore(store: ISessionStore): void {
+    this.sessionStore = store;
+    log.info(`Session store set to: ${store.constructor.name}`);
   }
 
   async use(plugin: IPlugin, options?: any): Promise<void> {
@@ -153,7 +161,8 @@ export class Agent {
       this.context,
       this.eventBus,
       planner,
-      toolExecutor
+      toolExecutor,
+      this.sessionStore
     );
 
     for (const iface of this.interfaces.getAll()) {

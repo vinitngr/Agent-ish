@@ -10,8 +10,18 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
+const args = process.argv.slice(2);
+const sessionArg = args.find(a => a.startsWith('--session='));
+const isNew = args.includes('--new');
+const targetSession = sessionArg ? sessionArg.split('=')[1] : null;
+
 client.connect(PORT, HOST, () => {
   console.log(`Connected to Agent Daemon at ${HOST}:${PORT}`);
+  if (isNew) {
+      client.write('/new\n');
+  } else if (targetSession) {
+      client.write(`/load ${targetSession}\n`);
+  }
   process.stdout.write('> ');
 });
 
