@@ -3,6 +3,7 @@ import { ToolRegistry } from '../registry/ToolRegistry';
 import { SkillRegistry } from '../registry/SkillRegistry';
 import { ProviderRegistry } from '../registry/ProviderRegistry';
 import { AgentEvents, EventBus } from '../../utils/events';
+import { ConsentManager } from '../consent/ConsentManager';
 
 export class Context implements IContext {
   readonly sessionId: string;
@@ -12,6 +13,7 @@ export class Context implements IContext {
   readonly skills: SkillRegistry;
   readonly providers: ProviderRegistry;
   readonly eventBus: EventBus<AgentEvents>;
+  readonly consentManager: ConsentManager;
 
   private store: Map<string, unknown> = new Map();
 
@@ -21,7 +23,8 @@ export class Context implements IContext {
     tools: ToolRegistry,
     skills: SkillRegistry,
     providers: ProviderRegistry,
-    eventBus: EventBus<AgentEvents>
+    eventBus: EventBus<AgentEvents>,
+    consentManager: ConsentManager
   ) {
     this.sessionId = this.generateId();
     this.config = config;
@@ -30,6 +33,7 @@ export class Context implements IContext {
     this.skills = skills;
     this.providers = providers;
     this.eventBus = eventBus;
+    this.consentManager = consentManager;
   }
 
   get<T>(key: string): T | undefined {

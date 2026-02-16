@@ -33,7 +33,7 @@ export class AgentController {
     this.planner = planner;
   }
 
-  async run(session: Session, input: string): Promise<string> {
+  async run(session: Session, input: string, metadata?: Record<string, any>): Promise<string> {
     log.info(`Starting execution for session ${session.id}`);
 
     session.addMessage({
@@ -73,6 +73,13 @@ export class AgentController {
 
       if (plan.kind === 'action') {
         this.eventBus.emit('orchestrator:act', session.id, 'tool_calls');
+
+        // Inject interface metadata into tool calls
+        if (metadata) {
+          plan.toolCalls.forEach(call => {
+            call.metadata = { ...call.metadata, ...metadata };
+          });
+        }
 
         session.addMessage({
           role: 'assistant',

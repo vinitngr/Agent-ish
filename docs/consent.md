@@ -31,13 +31,11 @@ Users manage consent per session using slash commands.
 
 | Command | Description |
 | :--- | :--- |
-| `/allow <tool>` | Grant permission for a tool for the current session. |
-| `/deny <tool>` | Revoke permission for a tool. |
-| `/consent` | View current status of allowed/blocked tools. |
+| `/allow <tool>` | Grant permission for a specific tool (e.g., `system.writeFile`). |
+| `/allow <namespace>` | Grant permission for an entire group (e.g., `/allow system` unlocks all `system.*` tools). |
+| `/allow *` | **Master Key:** Unlock every tool for the current session. |
+| `/deny <tool>` | Revoke permission (works for namespaces too). |
+| `/consent` | View current status of allowed patterns. |
 
 ## How it works
-1. Agent tries to run a tool marked `requiresConsent`.
-2. The `ConsentMiddleware` checks if the tool is already allowed for the session.
-3. If not, execution is blocked and the user is notified.
-4. User types `/allow <tool>` to grant permission.
-5. Agent can now execute that tool for the rest of the session.
+The `ConsentManager` uses prefix matching. If you allow `system`, any tool starting with `system.` (like `system.readFile`) will be automatically permitted without another prompt.

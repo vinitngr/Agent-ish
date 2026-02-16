@@ -40,14 +40,14 @@ export class Orchestrator {
     this.controller.setPlanner(planner);
   }
 
-  async handleInput(input: string, options?: { model?: string; sessionId?: string }): Promise<string> {
+  async handleInput(input: string, options?: { model?: string; sessionId?: string; metadata?: Record<string, any> }): Promise<string> {
     const session = await this.getOrCreateSession(options?.sessionId);
     
     if (options?.model) {
       session.metadata.model = options.model;
     }
 
-    return this.controller.run(session, input);
+    return this.controller.run(session, input, options?.metadata);
   }
 
   private async getOrCreateSession(explicitId?: string): Promise<Session> {

@@ -15,6 +15,7 @@ export interface ToolCall {
   id: string;
   name: string;
   arguments: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LLMResponse {

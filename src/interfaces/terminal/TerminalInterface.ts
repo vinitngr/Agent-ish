@@ -41,25 +41,18 @@ const DIVIDER = `${DIM}${'─'.repeat(50)}${RESET}`;
 
 export class TerminalInterface extends BaseInterface {
   name = 'terminal';
+  isTrusted = false;
   private running = false;
   private processing = false;
+  private inputBuffer: string = '';
+  private toolHistory: ToolExecutionHistory;
   private commands: Map<string, SlashCommand> = new Map();
   private cwd: string;
   private context?: IContext;
-  private inputBuffer: string = '';
-  private consentManager: ConsentManager;
-  private toolHistory: ToolExecutionHistory;
-
   constructor() {
     super();
     this.cwd = process.cwd();
-    this.consentManager = new ConsentManager();
     this.toolHistory = new ToolExecutionHistory();
-
-    this.consentManager.setPrompt(async (request) => {
-      const box = new ConsentBox(request);
-      return box.prompt();
-    });
 
     for (const cmd of defaultCommands) {
       this.commands.set(cmd.name, cmd);
@@ -84,6 +77,12 @@ export class TerminalInterface extends BaseInterface {
   async start(context: IContext): Promise<void> {
     this.running = true;
     this.context = context;
+
+    // Register terminal-specific consent prompt
+    this.context.consentManager.setPrompt('terminal', async (request) => {
+      const box = new ConsentBox(request);
+      return box.prompt();
+    });
 
     this.printBanner();
     
@@ -229,10 +228,10 @@ export class TerminalInterface extends BaseInterface {
         return;
       }
 
-      this.processing = true; // Mark as processing
+      this.processing = true;
 
-      if (fullInput.toLowerCase() === 'test') {
-        await runTestDemo(this.consentManager, this.context);
+      if (fullInput.toLowerCase() === 'test' && this.context) {
+        await runTestDemo(this.context.consentManager, this.context);
         this.processing = false;
         this.prompt();
         return;

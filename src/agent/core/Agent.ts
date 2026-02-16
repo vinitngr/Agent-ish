@@ -38,7 +38,7 @@ export class Agent {
   private orchestrator!: Orchestrator;
   private customPlanner: IPlanner | null = null;
   private sessionStore: ISessionStore;
-  private middlewares: Array<(call: ToolCall) => boolean | Promise<boolean>> = [];
+  private middlewares: Array<(call: ToolCall) => boolean | string | Promise<boolean | string>> = [];
 
   constructor(private configDir: string) {
     this.eventBus = new EventBus<AgentEvents>();
@@ -59,6 +59,7 @@ export class Agent {
   private setupDefaultMiddlewares(): void {
     this.addMiddleware(async (call) => {
       if (this.config.agent?.consent === false) return true;
+      if (call.metadata?.isTrusted === true) return true;
 
       const tool = await this.tools.get(call.name);
       if (!tool || !tool.requiresConsent) return true;
@@ -66,10 +67,17 @@ export class Agent {
       const decision = await this.consentManager.check({
         toolName: call.name,
         args: call.arguments as any,
-        description: tool.description
+        description: tool.description,
+        metadata: call.metadata
       });
 
-      return decision === ConsentDecision.ALLOW || decision === ConsentDecision.ALLOW_SESSION;
+      const allowed = decision === ConsentDecision.ALLOW || decision === ConsentDecision.ALLOW_SESSION;
+      
+      if (!allowed) {
+        return `⚠️ Access Denied: This tool requires your permission. Type '/allow ${call.name}' or '/allow ${call.name.split('.')[0]}' to proceed.`;
+      }
+
+      return true;
     });
   }
 
@@ -177,7 +185,8 @@ export class Agent {
       this.tools,
       this.skills,
       this.providers,
-      this.eventBus
+      this.eventBus,
+      this.consentManager
     );
 
     await this.lifecycle.transitionTo('READY' as any);
@@ -210,7 +219,13 @@ export class Agent {
 
     for (const iface of this.interfaces.getAll()) {
       await iface.start(this.context);
-      iface.onInput((input: string) => this.orchestrator.handleInput(input));
+      iface.onInput((input: string) => this.orchestrator.handleInput(input, { 
+        sessionId: this.context.sessionId,
+        metadata: { 
+          interface: iface.name,
+          isTrusted: iface.isTrusted 
+        } 
+      }));
     }
 
     log.info('Agent booted');
@@ -240,7 +255,7 @@ export class Agent {
     return this.processInput(input);
   }
 
-  async execute(input: string, options?: { model?: string; [key: string]: any }): Promise<string> {
+  async execute(input: string, options?: { model?: string; sessionId?: string; metadata?: Record<string, any>; [key: string]: any }): Promise<string> {
     if (!this.orchestrator) await this.boot();
    
     return this.processInput(input, options);
@@ -256,7 +271,7 @@ export class Agent {
     return this.orchestrator.handleInput(input, options);
   }
 
-  addMiddleware(fn: (call: ToolCall) => boolean | Promise<boolean>): void {
+  addMiddleware(fn: (call: ToolCall) => boolean | string | Promise<boolean | string>): void {
     this.middlewares.push(fn);
   }
 

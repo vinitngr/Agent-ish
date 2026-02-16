@@ -62,11 +62,14 @@ export interface ProvidersConfig {
   };
 }
 
+import { ConsentManager } from '../agent/consent/ConsentManager';
+
 export interface IContext {
   sessionId: string;
   config: AgentConfig;
   runtimeConfig: RuntimeConfig;
   eventBus: EventBus<AgentEvents>;
+  consentManager: ConsentManager;
   get<T>(key: string): T | undefined;
   set<T>(key: string, value: T): void;
 }
@@ -94,6 +97,7 @@ export interface SessionMessage {
 
 export interface IInterface {
   name: string;
+  isTrusted?: boolean;
   start(context: IContext): Promise<void>;
   stop(): Promise<void>;
   onInput(handler: (input: string) => Promise<string>): void;

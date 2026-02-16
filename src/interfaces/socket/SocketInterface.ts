@@ -1,22 +1,30 @@
 import { Server, Socket, createServer } from 'net';
+import { BaseInterface } from '../base/Interface';
 import { Agent } from '../../agent/core/Agent';
+import { IContext } from '../../types/Runtime';
 import { logger } from '../../utils/logger';
 
 const log = logger.child('socket');
 
-export class SocketInterface {
+export class SocketInterface extends BaseInterface {
+  name = 'socket';
+  isTrusted: boolean = false;
   private server: Server;
-  private agent: Agent;
   private port: number = 3000;
   private clients: Set<Socket> = new Set();
+  private context?: IContext;
 
-  constructor(agent: Agent, port: number = 3000) {
-    this.agent = agent;
+  constructor(agent: Agent, port: number = 3000, options: { isTrusted?: boolean } = {}) {
+    super();
     this.port = port;
+    this.isTrusted = options.isTrusted || false;
     this.server = createServer((socket) => this.handleConnection(socket));
+    
+    agent.interfaces.register(this);
   }
 
-  async start(): Promise<void> {
+  async start(context: IContext): Promise<void> {
+    this.context = context;
     return new Promise((resolve) => {
       this.server.listen(this.port, () => {
         log.info(`Socket Interface listening on port ${this.port}`);
@@ -52,18 +60,8 @@ export class SocketInterface {
 
       try {
         log.info(`Received command: ${input}`);
-        const options: any = { 
-          interface: 'socket', 
-          sessionId: socketSessionId 
-        };
-        const result = await this.agent.execute(input, options);
-        
-        if (options.newSessionId) {
-          socketSessionId = options.newSessionId;
-          socket.write(`[SESSION] Switched to: ${socketSessionId}\n`);
-          log.info(`Socket connection switched to session: ${socketSessionId}`);
-        }
-
+        // BaseInterface provides handleInput which triggers the agent middleware chain
+        const result = await this.handleInput(input);
         socket.write(result + '\n\n');
       } catch (error) {
         socket.write(`Error: ${(error as Error).message}\n`);

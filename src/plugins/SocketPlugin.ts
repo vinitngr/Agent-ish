@@ -9,8 +9,8 @@ export class SocketPlugin implements IPlugin {
 
   async register(agent: Agent, options?: any): Promise<void> {
     const port = options?.port || 3000;
-    this.interface = new SocketInterface(agent, port);
-    await this.interface.start();
+    const isTrusted = options?.isTrusted || false;
+    this.interface = new SocketInterface(agent, port, { isTrusted });
   }
 
   async shutdown(): Promise<void> {

@@ -5,6 +5,7 @@ import { logger } from '../../utils/logger';
 
 export class HttpInterface extends BaseInterface {
   name = 'http-raw';
+  isTrusted: boolean = false;
   private server: http.Server | null = null;
   private port = 3000;
 
