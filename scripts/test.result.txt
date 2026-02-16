@@ -1,0 +1,41 @@
+[2026-02-14T21:37:41.598Z] Starting Mock MCP Server on port 3001...
+[2026-02-14T21:37:41.601Z] === STARTING AGENT INTEGRATION TEST ===
+[2026-02-14T21:37:41.606Z] 1. Registering Plugins...
+[2026-02-14T21:37:41.692Z] 2. Initializing Agent...
+[2026-02-14T21:37:41.693Z] 3. Booting Agent...
+[2026-02-14T21:37:41.694Z] 
+--- VERIFYING TOOLS ---
+[2026-02-14T21:37:41.694Z] Registered Tools Count: 4
+[2026-02-14T21:37:41.695Z]  - Tool: system.readFile
+[2026-02-14T21:37:41.695Z]  - Tool: system.writeFile
+[2026-02-14T21:37:41.695Z]  - Tool: system.listDirectory
+[2026-02-14T21:37:41.696Z]  - Tool: web.fetch
+[2026-02-14T21:37:41.696Z] ✅ System Tools loaded
+[2026-02-14T21:37:41.705Z] 
+--- VERIFYING SKILLS (INITIAL) ---
+[2026-02-14T21:37:41.706Z] Initial Skills Count: 1
+[2026-02-14T21:37:41.706Z]  - Skill: greet-user
+[2026-02-14T21:37:41.707Z] 
+--- TESTING HOT RELOAD (SKILLS) ---
+[2026-02-14T21:37:41.707Z] Creating test skill at: C:\Users\HP VICTUS\Desktop\TobiCntrl\skills\test-dynamic-skill.md
+[2026-02-14T21:37:41.708Z] Waiting 3 seconds for watcher...
+[2026-02-14T21:37:41.715Z] [MockServer] Request: GET /sse
+[2026-02-14T21:37:41.716Z] [MockServer] SSE connection established
+[2026-02-14T21:37:41.731Z] [MockServer] Request: POST /messages
+[2026-02-14T21:37:41.732Z] [MockServer] JSON-RPC received: initialize
+[2026-02-14T21:37:41.743Z] [MockServer] Request: POST /messages
+[2026-02-14T21:37:41.743Z] [MockServer] JSON-RPC received: notifications/initialized
+[2026-02-14T21:37:41.744Z] [MockServer] Initialized notification received
+[2026-02-14T21:37:41.747Z] [MockServer] Request: POST /messages
+[2026-02-14T21:37:41.748Z] [MockServer] JSON-RPC received: tools/list
+[2026-02-14T21:37:44.712Z] Updated Skills Count: 2
+[2026-02-14T21:37:44.713Z] ✅ HOT RELOAD SUCCESS: Dynamic skill found!
+[2026-02-14T21:37:44.713Z] 
+--- VERIFYING MCP ---
+[2026-02-14T21:37:44.714Z] MCP Plugin initialized without error.
+[2026-02-14T21:37:44.714Z] Waiting 5 seconds for MCP connection...
+[2026-02-14T21:37:49.726Z] ✅ MCP Tools found: 1
+[2026-02-14T21:37:49.727Z]    - mcp.example.mock_tool
+[2026-02-14T21:37:49.727Z] 
+=== TEST COMPLETE ===
+[2026-02-14T21:37:49.728Z] Cleaning up...

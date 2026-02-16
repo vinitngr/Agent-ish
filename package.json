@@ -1,0 +1,33 @@
+{
+  "name": "agent-project",
+  "version": "1.0.0",
+  "description": "TypeScript-first modular agent framework — registry-driven, provider-agnostic, lazy-load friendly",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/main.ts",
+    "dev": "ts-node-dev --respawn src/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "agent",
+    "ai",
+    "framework",
+    "modular",
+    "typescript"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "dotenv": "^17.3.1",
+    "openai": "^6.22.0",
+    "zod": "^3.22.4"
+  }
+}

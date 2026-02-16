@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Storage (runtime data)
+storage/logs/
+storage/cache/
+# temp_plugins/
+storage/memory/
+
+# Dev notes (personal reference)
+.dev/
+
+# Environment
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+config/providers.json
+temp_plugins
