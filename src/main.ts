@@ -8,7 +8,6 @@ import { LLMPlugin } from './plugins/LLMPlugin';
 import minimist from 'minimist';
 
 const log = logger.child('main');
-
 async function main(): Promise<void> {
   const agent = new Agent('./config');
 

@@ -20,24 +20,14 @@ export class LLMPlanner implements IPlanner {
   }
 
   async plan(session: Session): Promise<PlanResult> {
-    let llm = this.context.providers.getLLM();
-    let model = session.metadata?.model as string | undefined;
-
-    if (model && model.includes(':')) {
-      const [providerId, modelId] = model.split(':');
-      const specificLLM = this.context.providers.getLLM(providerId);
-      
-      if (specificLLM) {
-        llm = specificLLM;
-        model = modelId;
-        log.info(`Switched to provider: ${providerId}, model: ${modelId}`);
-      } else {
-         log.warn(`Provider '${providerId}' not found. Using default.`);
-      }
-    }
-
+    const llm = this.context.providers.getLLM();
     if (!llm) {
       return { kind: 'error', error: 'No LLM provider configured' };
+    }
+
+    const model = session.metadata?.model as string | undefined;
+    if (model) {
+       log.info(`Using model override: ${model}`);
     }
 
     try {

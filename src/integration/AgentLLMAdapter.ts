@@ -20,14 +20,23 @@ export class AgentLLMAdapter implements ILLMProvider {
     let providerId = this.defaultProvider;
     let modelId = this.defaultModel;
 
-    const defaultModel = await this.service.getDefaultModel();
-    
-    if (!defaultModel) {
-      throw new Error('No active LLM providers found. Please check config/providers.json and ensure at least one provider is enabled with a valid API key.');
+    if (options?.model) {
+      if (options.model.includes(':')) {
+        const parts = options.model.split(':');
+        providerId = parts[0];
+        modelId = parts[1];
+      } else {
+        modelId = options.model;
+      }
+    } else {
+        const defaultModel = await this.service.getDefaultModel();
+        if (defaultModel) {
+            providerId = defaultModel.providerId;
+            modelId = defaultModel.id;
+        } else {
+             throw new Error('No active LLM providers found. Please check config/providers.json and ensure at least one provider is enabled with a valid API key.');
+        }
     }
-
-    providerId = defaultModel.providerId;
-    modelId = defaultModel.id;
 
     const provider = this.service.getProvider(providerId);
     if (!provider) throw new Error(`Provider '${providerId}' not found.`);
