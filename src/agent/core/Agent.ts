@@ -15,6 +15,7 @@ import { LLMPlanner } from '../orchestrator/LLMPlanner';
 import { ToolExecutor } from '../orchestrator/ToolExecutor';
 import { IPlanner } from '../orchestrator/Planner';
 import { DATAULT_AGENT_CONFIG } from '../../types/AgentConfig';
+import { ToolCall } from '../../types/Provider';
 
 const log = logger.child('agent');
 
@@ -32,6 +33,7 @@ export class Agent {
   private context!: Context;
   private orchestrator!: Orchestrator;
   private customPlanner: IPlanner | null = null;
+  private middlewares: Array<(call: ToolCall) => boolean | Promise<boolean>> = [];
 
   constructor(private configDir: string) {
     this.eventBus = new EventBus<AgentEvents>();
@@ -58,11 +60,62 @@ export class Agent {
     log.info(`Planner set to: ${planner.constructor.name}`);
   }
 
-  async use(plugin: IPlugin): Promise<void> {
-    await this.pluginRegistry.register(plugin);
+  async use(plugin: IPlugin, options?: any): Promise<void> {
+    await this.pluginRegistry.register(plugin, options);
   }
 
-  async init(): Promise<void> {
+  async loadPluginsFrom(directory: string, options: { monitoring?: boolean } = {}): Promise<void> {
+    const path = await import('path');
+    const fs = await import('fs');
+    const absolutePath = path.resolve(process.cwd(), directory);
+
+    if (!fs.existsSync(absolutePath)) {
+      log.warn(`Plugin directory not found: ${absolutePath}`);
+      return;
+    }
+
+    const load = async (pluginPath: string) => {
+      try {
+        const resolvedPath = require.resolve(pluginPath);
+        if (require.cache[resolvedPath]) {
+          delete require.cache[resolvedPath];
+        }
+        
+        const module = await import(pluginPath);
+        const PluginClass = module.default || Object.values(module)[0];
+        
+        if (typeof PluginClass === 'function') {
+          await this.use(new PluginClass());
+        }
+      } catch (error) {
+        log.error(`Failed to load plugin from ${pluginPath}:`, error);
+      }
+    };
+
+    const items = fs.readdirSync(absolutePath);
+    for (const item of items) {
+      const itemPath = path.join(absolutePath, item);
+      if (fs.statSync(itemPath).isDirectory() || item.endsWith('.ts') || item.endsWith('.js')) {
+        await load(itemPath);
+      }
+    }
+
+    if (options.monitoring) {
+      const chokidar = await import('chokidar');
+      chokidar.watch(absolutePath, { 
+        ignoreInitial: true,
+        depth: 0 
+      }).on('add', async (filePath) => {
+        log.info(`New plugin detected: ${filePath}`);
+        await load(filePath);
+      }).on('addDir', async (dirPath) => {
+        log.info(`New plugin directory detected: ${dirPath}`);
+        await load(dirPath);
+      });
+    }
+  }
+
+  async init(options: any = {}): Promise<void> {
     await this.lifecycle.transitionTo('INITIALIZING' as any);
     
     this.context = new Context(
@@ -78,7 +131,7 @@ export class Agent {
     log.info('Agent initialized');
   }
 
-  async boot(): Promise<void> {
+  async boot(options: any = {}): Promise<void> {
     const agentConfig = DATAULT_AGENT_CONFIG;
 
     const toolExecutor = new ToolExecutor(
@@ -108,7 +161,7 @@ export class Agent {
     log.info('Agent booted');
   }
 
-  async run(): Promise<void> {
+  async run(options: any = {}): Promise<void> {
     await this.lifecycle.transitionTo('RUNNING' as any);
     log.info('Agent running');
 
@@ -124,6 +177,32 @@ export class Agent {
   async handleInput(input: string): Promise<string> {
     if (!this.orchestrator) throw new Error('Agent not booted');
     return this.orchestrator.handleInput(input);
+  }
+
+  async execute(input: string, options?: { model?: string }): Promise<string> {
+    if (!this.orchestrator) await this.boot();
+   
+    return this.orchestrator.handleInput(input, options);
+  }
+
+  addMiddleware(fn: (call: ToolCall) => boolean | Promise<boolean>): void {
+    this.middlewares.push(fn);
+  }
+
+  inspect(): Record<string, any> {
+    return {
+      config: this.config,
+      lifecycle: this.lifecycle.getState(),
+      tools: this.tools.list(),
+      skills: this.skills.list(),
+      providers: this.providers.listActive(),
+      interfaces: this.interfaces.getAll().map(i => i.name),
+      plugins: this.pluginRegistry.list()
+    };
+  }
+
+  on(event: keyof AgentEvents, handler: (...args: any[]) => void): void {
+    this.eventBus.on(event, handler);
   }
 
   async shutdown(): Promise<void> {

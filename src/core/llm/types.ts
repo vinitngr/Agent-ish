@@ -19,6 +19,7 @@ export interface CompletionRequest {
   maxTokens?: number;
   stop?: string[];
   responseFormat?: 'text' | 'json_object';
+  tools?: any[];
 }
 
 export interface CompletionResponse {

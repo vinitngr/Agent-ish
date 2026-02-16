@@ -15,7 +15,7 @@ export class PluginRegistry {
     this.eventBus = eventBus;
   }
 
-  async register(plugin: IPlugin): Promise<void> {
+  async register(plugin: IPlugin, options?: any): Promise<void> {
     if (this.plugins.has(plugin.name)) {
       log.warn(`Plugin already registered: ${plugin.name}`);
       return;
@@ -23,7 +23,7 @@ export class PluginRegistry {
 
     try {
       log.info(`Registering plugin: ${plugin.name} v${plugin.version}`);
-      await plugin.register(this.agent);
+      await plugin.register(this.agent, options);
       this.plugins.set(plugin.name, plugin);
       this.eventBus.emit('plugin:registered', plugin.name);
     } catch (error) {

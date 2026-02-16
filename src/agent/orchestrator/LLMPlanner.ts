@@ -20,7 +20,22 @@ export class LLMPlanner implements IPlanner {
   }
 
   async plan(session: Session): Promise<PlanResult> {
-    const llm = this.context.providers.getLLM();
+    let llm = this.context.providers.getLLM();
+    let model = session.metadata?.model as string | undefined;
+
+    if (model && model.includes(':')) {
+      const [providerId, modelId] = model.split(':');
+      const specificLLM = this.context.providers.getLLM(providerId);
+      
+      if (specificLLM) {
+        llm = specificLLM;
+        model = modelId;
+        log.info(`Switched to provider: ${providerId}, model: ${modelId}`);
+      } else {
+         log.warn(`Provider '${providerId}' not found. Using default.`);
+      }
+    }
+
     if (!llm) {
       return { kind: 'error', error: 'No LLM provider configured' };
     }
@@ -38,7 +53,10 @@ export class LLMPlanner implements IPlanner {
       log.info('Thinking...');
       this.eventBus.emit('orchestrator:think', session.id);
       
-      const response = await llm.chat(messages, { tools: toolDefs });
+      const response = await llm.chat(messages, { 
+        tools: toolDefs,
+        model 
+      });
 
       if (response.toolCalls && response.toolCalls.length > 0) {
         log.info(`Plan: Call tools ${response.toolCalls.map(c => c.name).join(', ')}`);

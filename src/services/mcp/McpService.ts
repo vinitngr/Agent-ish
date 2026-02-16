@@ -39,7 +39,7 @@ export class McpService {
 
     await this.loadConfig(this.configPath);
 
-    if (this.agent.config.agent.monitoring?.config !== false) {
+    if (this.agent.config.monitoring?.config !== false) {
        this.watchConfig(this.configPath);
     }
   }
@@ -136,8 +136,13 @@ export class McpService {
       
       this.toolsByServer.set(serverName, registeredTools);
       log.info(`Registered ${tools.length} tools from MCP server "${serverName}"`);
-    } catch (error) {
-      log.error(`Failed to connect to MCP server ${serverName}:`, error);
+    } catch (error: any) {
+      if (error?.message?.includes('ECONNREFUSED')) {
+        log.warn(`Could not connect to MCP server "${serverName}" at ${config.url} (Connection Refused). Is it running?`);
+        log.debug(`Connection error details:`, error);
+      } else {
+        log.error(`Failed to connect to MCP server ${serverName}:`, error);
+      }
     }
   }
 

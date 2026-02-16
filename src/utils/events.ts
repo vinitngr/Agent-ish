@@ -62,6 +62,7 @@ export type AgentEvents = {
   'orchestrator:think': [sessionId: string];
   'orchestrator:act': [sessionId: string, action: string];
   'orchestrator:observe': [sessionId: string, result: unknown];
+  'tool:call:start': [call: { name: string; arguments: Record<string, unknown> }];
   'error': [error: Error];
 };
 

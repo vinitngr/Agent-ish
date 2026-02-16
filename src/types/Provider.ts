@@ -29,6 +29,7 @@ export interface LLMResponse {
 }
 
 export interface LLMRequestOptions {
+  model?: string;
   temperature?: number;
   maxTokens?: number;
   stopSequences?: string[];

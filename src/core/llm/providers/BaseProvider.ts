@@ -30,4 +30,34 @@ export abstract class BaseProvider implements ILLMProvider {
   protected getModelId(request: CompletionRequest): string {
     return request.model || '';
   }
+
+  async chat(messages: any[], options?: any): Promise<any> {
+    const request: CompletionRequest = {
+      model: options?.model,
+      messages: messages.map(m => ({
+        role: m.role,
+        content: m.content,
+        toolCalls: m.toolCalls,
+        toolCallId: m.toolCallId
+      })),
+      maxTokens: options?.maxTokens,
+      temperature: options?.temperature,
+      tools: options?.tools?.map((t: any) => ({
+        type: 'function',
+        function: {
+          name: t.name,
+          description: t.description,
+          parameters: t.parameters
+        }
+      }))
+    };
+
+    const response = await this.generate(request);
+
+    return {
+      content: response.content,
+      toolCalls: (response as any).toolCalls || [],
+      usage: response.usage
+    };
+  }
 }

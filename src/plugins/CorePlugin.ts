@@ -8,7 +8,7 @@ export class CorePlugin implements IPlugin {
   name = 'core';
   version = '1.0.0';
 
-  async register(agent: Agent): Promise<void> {
+  async register(agent: Agent, options?: any): Promise<void> {
     const allTools = [...systemTools, ...webTools, ...customTools];
     
     for (const tool of allTools) {
@@ -32,7 +32,7 @@ export class CorePlugin implements IPlugin {
       agent.skills.register(skill);
     }
 
-    if (agent.config.agent.monitoring?.skills !== false) {
+    if (agent.config.monitoring?.skills !== false) {
       skillLoader.watch(absoluteDir, 
         (skill) => {
           agent.skills.register(skill);

@@ -5,5 +5,5 @@ export interface IPlugin {
   version: string;
   description?: string;
   dependencies?: string[];
-  register(agent: Agent): Promise<void>;
+  register(agent: Agent, options?: any): Promise<void>;
 }

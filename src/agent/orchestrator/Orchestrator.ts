@@ -2,11 +2,8 @@ import { Context } from '../runtime/Context';
 import { Session } from '../runtime/Session';
 import { EventBus, AgentEvents } from '../../utils/events';
 import { logger } from '../../utils/logger';
-import { Dispatcher } from './Dispatcher'; 
-import { LLMMessage, ToolCall } from '../../types/Provider'; 
 import { AgentController } from './AgentController';
 import { ToolExecutor } from './ToolExecutor';
-import { LLMPlanner } from './LLMPlanner';
 import { IPlanner } from './Planner';
 import { DATAULT_AGENT_CONFIG } from '../../types/AgentConfig';
 
@@ -43,8 +40,13 @@ export class Orchestrator {
     this.controller.setPlanner(planner);
   }
 
-  async handleInput(input: string): Promise<string> {
+  async handleInput(input: string, options?: { model?: string }): Promise<string> {
     const session = this.getOrCreateSession();
+    
+    if (options?.model) {
+      session.metadata.model = options.model;
+    }
+
     return this.controller.run(session, input);
   }
 

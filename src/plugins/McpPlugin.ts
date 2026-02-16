@@ -12,7 +12,7 @@ export class McpPlugin implements IPlugin {
     this.configPath = configPath;
   }
 
-  async register(agent: Agent): Promise<void> {
+  async register(agent: Agent, options?: any): Promise<void> {
     const service = new McpService(agent, this.configPath);
     service.start().catch((err) => {
       console.error('[McpPlugin] Failed to start MCP service:', err);

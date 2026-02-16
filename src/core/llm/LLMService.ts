@@ -41,15 +41,17 @@ export class LLMService {
     }
   }
 
-  async initialize(): Promise<void> {
+  async initialize(options: { watch?: boolean } = {}): Promise<void> {
     await this.loadAndRegisterProviders();
 
-    this.configStore.onConfigChange?.(() => {
-      console.log('Reloading LLM providers due to config change...');
-      this.loadAndRegisterProviders().catch(err => {
-        console.error('Failed to reload LLM config:', err);
+    if (options.watch !== false) {
+      this.configStore.onConfigChange?.(() => {
+        console.log('Reloading LLM providers due to config change...');
+        this.loadAndRegisterProviders().catch(err => {
+          console.error('Failed to reload LLM config:', err);
+        });
       });
-    });
+    }
   }
 
   private async loadAndRegisterProviders(): Promise<void> {

@@ -21,7 +21,7 @@ export class MarkdownSkillLoader {
     return skills;
   }
 
-  watch(directory: string, onUpdate: (skill: MarkdownSkill) => void, onDelete: (name: string) => void): void {
+  async watch(directory: string, onUpdate: (skill: MarkdownSkill) => void, onDelete: (name: string) => void): Promise<void> {
     if (!fs.existsSync(directory)) return;
 
     log.info(`Watching skills directory: ${directory}`);
@@ -38,24 +38,25 @@ export class MarkdownSkillLoader {
       }
     }
 
-    let fsWait: NodeJS.Timeout | null = null;
-    
-    fs.watch(directory, { recursive: true }, (event, filename) => {
-      if (filename && path.basename(filename) === 'SKILL.md') {
-        if (fsWait) return;
-        fsWait = setTimeout(() => {
-          fsWait = null;
-          
+    try {
+      const chokidar = await import('chokidar');
+      const watcher = chokidar.watch(directory, { 
+        ignoreInitial: true,
+        persistent: true
+      });
+
+      watcher.on('all', (event, filename) => {
+        if (filename && path.basename(filename) === 'SKILL.md') {
           const fullPath = path.join(directory, filename);
           
-          if (fs.existsSync(fullPath)) {
+          if (event === 'add' || event === 'change') {
              const skill = this.parseSkill(fullPath);
              if (skill) {
                 fileToSkillMap.set(fullPath, skill.name);
                 log.info(`Skill updated: ${skill.name}`);
                 onUpdate(skill);
              }
-          } else {
+          } else if (event === 'unlink') {
              const skillName = fileToSkillMap.get(fullPath);
              if (skillName) {
                log.info(`Skill file deleted: ${skillName}`);
@@ -63,9 +64,11 @@ export class MarkdownSkillLoader {
                fileToSkillMap.delete(fullPath);
              }
           }
-        }, 100);
-      }
-    });
+        }
+      });
+    } catch (error) {
+      log.error(`Failed to initialize skill watcher:`, error);
+    }
   }
 
   private processFiles(files: string[], skills: MarkdownSkill[]) {

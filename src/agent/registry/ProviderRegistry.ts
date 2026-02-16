@@ -57,6 +57,13 @@ export class ProviderRegistry {
     return entries;
   }
 
+  listActive(): { type: string; name: string }[] {
+    return Array.from(this.providers.keys()).map(key => {
+      const [type, name] = key.split(':');
+      return { type, name };
+    });
+  }
+
   async shutdownAll(): Promise<void> {
     for (const [key, provider] of this.providers) {
       try {

@@ -1,7 +1,6 @@
-
+import { AppLLMConfig, IConfigStore } from '../config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { AppLLMConfig, IConfigStore } from '../config';
 
 export class JsonFileConfigStore implements IConfigStore {
   private configPath: string;
@@ -27,27 +26,24 @@ export class JsonFileConfigStore implements IConfigStore {
     await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), 'utf-8');
   }
 
-  onConfigChange(callback: () => void): void {
-    const fsActual = require('fs');
-    let debounceTimer: NodeJS.Timeout;
-
+  async onConfigChange(callback: () => void): Promise<void> {
     try {
-      if (!fsActual.existsSync(this.configPath)) {
-         console.warn(`Config file ${this.configPath} does not exist yet. Hot-reload might not work until restart.`);
-         return;
-      }
+      const chokidar = await import('chokidar');
+      const watcher = chokidar.watch(this.configPath, {
+        ignoreInitial: true,
+        persistent: true
+      });
 
-      fsActual.watch(this.configPath, (eventType: string, filename: string) => {
-        if (eventType === 'change' || eventType === 'rename') {
-          clearTimeout(debounceTimer);
-          debounceTimer = setTimeout(() => {
-            console.log('Config change detected, reloading...');
-            callback();
-          }, 100);
-        }
+      watcher.on('change', () => {
+        console.log('Config change detected, reloading...');
+        callback();
+      });
+
+      watcher.on('error', (error) => {
+        console.error('Failed to setup config watch:', error);
       });
     } catch (error) {
-      console.error('Failed to setup config watch:', error);
+      console.error('Failed to load chokidar:', error);
     }
   }
 }

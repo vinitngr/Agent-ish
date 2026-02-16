@@ -9,7 +9,7 @@ export class LLMPlugin implements IPlugin {
   name = 'llm-core';
   version = '1.0.0';
 
-  async register(agent: Agent): Promise<void> {
+  async register(agent: Agent, options?: any): Promise<void> {
     const configPath = path.resolve(process.cwd(), 'config/providers.json');
     const store = new JsonFileConfigStore(configPath);
     const service = new LLMService(store);
@@ -17,7 +17,8 @@ export class LLMPlugin implements IPlugin {
     service.registerProvider(GeminiProvider);
     service.registerProvider(OpenAIProvider);
 
-    await service.initialize();
+    const watch = agent.config.monitoring?.config !== false;
+    await service.initialize({ watch });
 
     const adapter = new AgentLLMAdapter(service);
     agent.providers.register('llm', adapter);
