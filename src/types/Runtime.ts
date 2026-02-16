@@ -15,6 +15,7 @@ export interface AgentConfig {
   agent: {
     name: string;
     version: string;
+    consent?: boolean;
   };
   logging: {
     level: 'debug' | 'info' | 'warn' | 'error';
@@ -23,6 +24,7 @@ export interface AgentConfig {
   modules: {
     tools: string[];
     skills: string[];
+    skillsDir?: string;
     interfaces: string[];
   };
   monitoring?: {

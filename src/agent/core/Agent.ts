@@ -15,6 +15,8 @@ import { LLMPlanner } from '../orchestrator/LLMPlanner';
 import { ToolExecutor } from '../orchestrator/ToolExecutor';
 import { IPlanner } from '../orchestrator/Planner';
 import { ISessionStore, MemorySessionStore } from '../runtime/SessionStore';
+import { ConsentManager } from '../consent/ConsentManager';
+import { ConsentDecision } from '../../types/Consent';
 import { DATAULT_AGENT_CONFIG } from '../../types/AgentConfig';
 import { ToolCall } from '../../types/Provider';
 
@@ -26,6 +28,7 @@ export class Agent {
   readonly skills: SkillRegistry;
   readonly providers: ProviderRegistry;
   readonly interfaces: InterfaceRegistry;
+  readonly consentManager: ConsentManager;
 
   private pluginRegistry: PluginRegistry;
   private lifecycle: Lifecycle;
@@ -49,6 +52,25 @@ export class Agent {
     this.interfaces = new InterfaceRegistry(this.eventBus);
     this.pluginRegistry = new PluginRegistry(this, this.eventBus);
     this.sessionStore = new MemorySessionStore();
+    this.consentManager = new ConsentManager();
+    this.setupDefaultMiddlewares();
+  }
+
+  private setupDefaultMiddlewares(): void {
+    this.addMiddleware(async (call) => {
+      if (this.config.agent?.consent === false) return true;
+
+      const tool = await this.tools.get(call.name);
+      if (!tool || !tool.requiresConsent) return true;
+
+      const decision = await this.consentManager.check({
+        toolName: call.name,
+        args: call.arguments as any,
+        description: tool.description
+      });
+
+      return decision === ConsentDecision.ALLOW || decision === ConsentDecision.ALLOW_SESSION;
+    });
   }
 
   get config(): AgentConfig {
@@ -126,6 +148,26 @@ export class Agent {
     }
   }
 
+  async loadSkillsFrom(directory: string, options: { monitoring?: boolean } = {}): Promise<void> {
+    const { MarkdownSkillLoader } = await import('../../skills/loaders/MarkdownSkillLoader');
+    const skillLoader = new MarkdownSkillLoader();
+    const path = await import('path');
+    const absoluteDir = path.resolve(process.cwd(), directory);
+
+    const skills = await skillLoader.loadSkills(absoluteDir);
+    for (const skill of skills) {
+      this.skills.register(skill);
+    }
+
+    if (options.monitoring) {
+      skillLoader.watch(absoluteDir, 
+        (skill: any) => this.skills.register(skill),
+        (name: string) => this.skills.unregister(name)
+      );
+    }
+    log.info(`Loaded ${skills.length} skills from ${directory}`);
+  }
+
   async init(options: any = {}): Promise<void> {
     await this.lifecycle.transitionTo('INITIALIZING' as any);
     
@@ -148,7 +190,8 @@ export class Agent {
     const toolExecutor = new ToolExecutor(
       this.context,
       agentConfig.tools,
-      this.eventBus
+      this.eventBus,
+      this.middlewares
     );
 
     const planner = this.customPlanner || new LLMPlanner(

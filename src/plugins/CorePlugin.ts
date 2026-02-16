@@ -15,13 +15,15 @@ export class CorePlugin implements IPlugin {
       agent.tools.register(tool);
     }
 
-    await this.loadSkills(agent);
+    await this.loadSkills(agent, options);
   }
 
-  private async loadSkills(agent: Agent): Promise<void> {
+  private async loadSkills(agent: Agent, options?: any): Promise<void> {
     const { MarkdownSkillLoader } = await import('../skills/loaders/MarkdownSkillLoader');
     const skillLoader = new MarkdownSkillLoader();
-    const absoluteDir = require('path').resolve(process.cwd(), './skills');
+    
+    const skillsDir = options?.skillsDir || agent.config.modules?.skillsDir || './skills';
+    const absoluteDir = require('path').resolve(process.cwd(), skillsDir);
     
     if (!require('fs').existsSync(absoluteDir)) {
       return;

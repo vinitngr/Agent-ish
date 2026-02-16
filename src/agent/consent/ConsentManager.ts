@@ -40,6 +40,15 @@ export class ConsentManager {
     return this.sessionAllowed.has(toolName);
   }
 
+  grantSession(toolName: string): void {
+    this.sessionAllowed.add(toolName);
+    log.info(`Tool "${toolName}" manually allowed for session`);
+  }
+
+  listAllowed(): string[] {
+    return Array.from(this.sessionAllowed);
+  }
+
   revokeSession(toolName: string): void {
     this.sessionAllowed.delete(toolName);
   }

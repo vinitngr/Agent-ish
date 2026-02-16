@@ -24,11 +24,18 @@ export class ToolExecutor {
   private config: ToolConfig;
   private eventBus: EventBus<AgentEvents>;
   private circuitBreakers: Map<string, CircuitBreakerState> = new Map();
+  private middlewares: Array<(call: ToolCall) => boolean | Promise<boolean>>;
 
-  constructor(context: Context, config: ToolConfig, eventBus: EventBus<AgentEvents>) {
+  constructor(
+    context: Context, 
+    config: ToolConfig, 
+    eventBus: EventBus<AgentEvents>,
+    middlewares: Array<(call: ToolCall) => boolean | Promise<boolean>> = []
+  ) {
     this.context = context;
     this.config = config;
     this.eventBus = eventBus;
+    this.middlewares = middlewares;
   }
 
   async executeBatch(calls: ToolCall[]): Promise<ExecutorResult[]> {
@@ -72,6 +79,18 @@ export class ToolExecutor {
   }
 
   private async executeSingle(call: ToolCall): Promise<ToolResult> {
+    // 1. Run Middlewares
+    for (const middleware of this.middlewares) {
+      const allowed = await middleware(call);
+      if (!allowed) {
+        log.warn(`Tool execution blocked by middleware: ${call.name}`);
+        return { 
+          success: false, 
+          error: `Execution of ${call.name} denied by security middleware or user consent.` 
+        };
+      }
+    }
+
     const start = Date.now();
     const tool = await this.context.tools.get(call.name);
 

@@ -39,5 +39,12 @@ description: friendly greeting skill
 When the user says hello, reply: "Hello! I am your agent. How can I help?"
 ```
 
+## Programmatic Directory Loading
+You can also load a directory of skills directly via the `Agent` instance. This is useful for loading multiple skill folders or if you aren't using the `CorePlugin`.
+
+```typescript
+await agent.loadSkillsFrom('./custom-skills', { monitoring: true });
+```
+
 ## Hot-Reloading
-Skills are monitored. Editing any `SKILL.md` file instantly updates the agent's capabilities without a restart.
+Skills are monitored when `monitoring: true` is passed to either the `CorePlugin` or `loadSkillsFrom`. Editing any `SKILL.md` file instantly updates the agent's capabilities without a restart.

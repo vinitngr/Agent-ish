@@ -19,6 +19,7 @@ export interface ITool {
   name: string;
   description: string;
   parameters: ToolParameter[];
+  requiresConsent?: boolean;
   execute(context: IContext, args: Record<string, unknown>): Promise<ToolResult>;
 }
 

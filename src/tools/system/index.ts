@@ -28,6 +28,7 @@ const readFileTool: ITool = {
 const writeFileTool: ITool = {
   name: 'system.writeFile',
   description: 'Write content to a file on the filesystem',
+  requiresConsent: true,
   parameters: [
     {
       name: 'path',

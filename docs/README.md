@@ -9,7 +9,8 @@ Welcome to the documentation for the Agent-ish core. This project is built as a 
 - **[tools.md](./tools.md)**: Manual and lazy registration of agent tools.
 - **[skills.md](./skills.md)**: Markdown-based skills and capability registration.
 - **[interfaces.md](./interfaces.md)**: Adding new I/O layers (TCP, HTTP, Terminal).
-- **[sessions.md](./sessions.md)**: Multi-session management and persistence logic.
+- [sessions.md](./sessions.md): Multi-session management and persistence logic.
+- [consent.md](./consent.md): Human-in-the-Loop (HITL) tool permissions.
 
 ### Customization & Ops
 - **[customization.md](./customization.md)**: Overriding Planners, Storage, and adding Security Middlewares.
