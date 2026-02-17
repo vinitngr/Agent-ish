@@ -14,7 +14,7 @@ import { ToolResult } from '../../types/Tool';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const log = logger.child('terminal');
+// const log = logger.child('terminal');
 
 const CYAN = '\x1b[36m';
 const DIM = '\x1b[2m';
@@ -41,14 +41,12 @@ const DIVIDER = `${DIM}${'─'.repeat(50)}${RESET}`;
 
 export class TerminalInterface extends BaseInterface {
   name = 'terminal';
-  isTrusted = false;
   private running = false;
   private processing = false;
   private inputBuffer: string = '';
   private toolHistory: ToolExecutionHistory;
   private commands: Map<string, SlashCommand> = new Map();
   private cwd: string;
-  private context?: IContext;
   constructor() {
     super();
     this.cwd = process.cwd();
@@ -75,11 +73,11 @@ export class TerminalInterface extends BaseInterface {
   }
 
   async start(context: IContext): Promise<void> {
+    await super.start(context);
     this.running = true;
-    this.context = context;
 
     // Register terminal-specific consent prompt
-    this.context.consentManager.setPrompt('terminal', async (request) => {
+    this.context!.consentManager.setPrompt('terminal', async (request) => {
       const box = new ConsentBox(request);
       return box.prompt();
     });
@@ -97,7 +95,7 @@ export class TerminalInterface extends BaseInterface {
         fs.appendFileSync(logFile, line);
     });
 
-    log.info('Terminal interface started');
+    this.log.info('Terminal interface started');
 
     if (this.context && this.context.eventBus) {
       this.context.eventBus.on('tool:executed', (name: string, args: Record<string, unknown>, result: ToolResult, duration: number) => {
@@ -148,7 +146,7 @@ export class TerminalInterface extends BaseInterface {
     process.stdin.pause();
     console.log('');
     console.log(`${DIM}  Session ended. Goodbye! 👋${RESET}\n`);
-    log.info('Terminal interface stopped');
+    this.log.info('Terminal interface stopped');
   }
 
   private printBanner(): void {

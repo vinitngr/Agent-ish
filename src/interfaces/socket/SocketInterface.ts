@@ -4,15 +4,13 @@ import { Agent } from '../../agent/core/Agent';
 import { IContext } from '../../types/Runtime';
 import { logger } from '../../utils/logger';
 
-const log = logger.child('socket');
+// const log = logger.child('socket');
 
 export class SocketInterface extends BaseInterface {
   name = 'socket';
-  isTrusted: boolean = false;
   private server: Server;
   private port: number = 3000;
   private clients: Set<Socket> = new Set();
-  private context?: IContext;
 
   constructor(agent: Agent, port: number = 3000, options: { isTrusted?: boolean } = {}) {
     super();
@@ -24,10 +22,10 @@ export class SocketInterface extends BaseInterface {
   }
 
   async start(context: IContext): Promise<void> {
-    this.context = context;
+    await super.start(context);
     return new Promise((resolve) => {
       this.server.listen(this.port, () => {
-        log.info(`Socket Interface listening on port ${this.port}`);
+        this.log.info(`Socket Interface listening on port ${this.port}`);
         resolve();
       });
     });
@@ -42,7 +40,7 @@ export class SocketInterface extends BaseInterface {
   }
 
   private handleConnection(socket: Socket) {
-    log.info('New client connected');
+    this.log.info('New client connected');
     this.clients.add(socket);
 
     let socketSessionId: string | undefined;
@@ -59,8 +57,7 @@ export class SocketInterface extends BaseInterface {
       }
 
       try {
-        log.info(`Received command: ${input}`);
-        // BaseInterface provides handleInput which triggers the agent middleware chain
+        this.log.info(`Received command: ${input}`);
         const result = await this.handleInput(input);
         socket.write(result + '\n\n');
       } catch (error) {
@@ -69,15 +66,15 @@ export class SocketInterface extends BaseInterface {
     });
 
     socket.on('close', () => {
-      log.info('Client disconnected');
+      this.log.info('Client disconnected');
       this.clients.delete(socket);
     });
     
     socket.on('error', (err: any) => {
       if (err.code === 'ECONNRESET') {
-        log.info('Client connection reset');
+        this.log.info('Client connection reset');
       } else {
-        log.error('Socket error:', err);
+        this.log.error('Socket error:', err);
       }
     });
   }

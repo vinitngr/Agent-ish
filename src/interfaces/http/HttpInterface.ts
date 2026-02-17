@@ -5,11 +5,11 @@ import { logger } from '../../utils/logger';
 
 export class HttpInterface extends BaseInterface {
   name = 'http-raw';
-  isTrusted: boolean = false;
   private server: http.Server | null = null;
   private port = 3000;
 
   async start(context: IContext): Promise<void> {
+    await super.start(context);
 
     this.server = http.createServer(async (req, res) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,10 +29,8 @@ export class HttpInterface extends BaseInterface {
           try {
             const { input } = JSON.parse(body);
             
-            context.eventBus.emit('interface:input', this.name, input);
-            
+            // handleInput now emits interface:input and interface:output events
             const result = await this.handleInput(input);
-            context.eventBus.emit('interface:output', this.name, result);
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ result }));
@@ -49,7 +47,7 @@ export class HttpInterface extends BaseInterface {
 
     return new Promise((resolve) => {
       this.server?.listen(this.port, () => {
-        logger.info(`HTTP Interface listening on port ${this.port}`);
+        this.log.info(`HTTP Interface listening on port ${this.port}`);
         resolve();
       });
     });
@@ -60,5 +58,4 @@ export class HttpInterface extends BaseInterface {
       this.server?.close(() => resolve());
     });
   }
-
 }
