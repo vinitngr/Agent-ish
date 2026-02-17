@@ -1,0 +1,18 @@
+{
+  "defaultModel": "openai:gpt-4o-mini",
+  "fallbackModels": ["gemini:gemini-1.5-flash"],
+  "providers": [
+    {
+      "id": "openai",
+      "enabled": true,
+      "apiKey": "${OPENAI_API_KEY}",
+      "models": ["gpt-4o-mini"]
+    },
+    {
+      "id": "gemini",
+      "enabled": false,
+      "apiKey": "${GEMINI_API_KEY}",
+      "models": ["gemini-1.5-flash"]
+    }
+  ]
+}

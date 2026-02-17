@@ -40,6 +40,11 @@ export class ConfigLoader {
     const filePath = path.join(this.configDir, filename);
 
     if (!fs.existsSync(filePath)) {
+      if (filename === 'providers.json') {
+        throw new Error(
+          `Config file not found: ${filePath}. This file is required for LLM provider credentials and is intentionally gitignored. Copy config/providers.example.json to config/providers.json and fill your secrets (or use env var placeholders like \${OPENAI_API_KEY}).`
+        );
+      }
       throw new Error(`Config file not found: ${filePath}`);
     }
 
