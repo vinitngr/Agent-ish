@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   // await agent.use(new TerminalPlugin());
   await agent.use(new SocketPlugin());
   await agent.use(new SlashCommandPlugin());
-  await agent.use(new ShellCommandPlugin({ allowedInterfaces: ['socket'] }));
+  await agent.use(new ShellCommandPlugin({ allowedInterfaces: ['socket', 'terminal'] }));
   
   await agent.loadPluginsFrom('./custom_plugins', { monitoring: true });
   

@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as chokidar from 'chokidar';
 import { Agent } from '../../agent/core/Agent';
 import { ITool, ToolParameter, ToolResult } from '../../types/Tool';
 import { IContext } from '../../types/Runtime';
@@ -25,6 +26,7 @@ export class McpService {
   private clients: Map<string, Client> = new Map();
   private toolsByServer: Map<string, string[]> = new Map();
   private configPath: string;
+  private watcher?: any;
 
   constructor(agent: Agent, configPath?: string) {
     this.agent = agent;
@@ -45,21 +47,29 @@ export class McpService {
   }
 
   async stop(): Promise<void> {
+    if (this.watcher) {
+      await this.watcher.close();
+    }
     for (const [serverName] of this.clients) {
       await this.disconnectServer(serverName);
     }
   }
 
   private watchConfig(configPath: string) {
-    let fsWait: NodeJS.Timeout | null = null;
-    
-    fs.watch(configPath, (event, filename) => {
-      if (fsWait) return;
-      fsWait = setTimeout(async () => {
-        fsWait = null;
-        log.info('MCP config changed, reloading...');
-        await this.loadConfig(configPath);
-      }, 100);
+    if (this.watcher) this.watcher.close();
+
+    this.watcher = chokidar.watch(configPath, {
+      ignoreInitial: true,
+      persistent: true
+    });
+
+    this.watcher.on('change', async () => {
+      log.info('MCP config changed, reloading...');
+      await this.loadConfig(configPath);
+    });
+
+    this.watcher.on('error', (error: any) => {
+      log.error('MCP config watcher error:', error);
     });
   }
 
@@ -96,7 +106,6 @@ export class McpService {
   private async disconnectServer(serverName: string) {
     log.info(`Disconnecting MCP server: ${serverName}`);
     
-    // Unregister tools
     const toolNames = this.toolsByServer.get(serverName) || [];
     for (const name of toolNames) {
       this.agent.tools.unregister(name);
@@ -119,7 +128,7 @@ export class McpService {
           headers: config.headers
         } as any
       });
-      const client = new Client({ name: 'tobi-agent', version: '1.0.0' });
+      const client = new Client({ name: 'agent-ish', version: '1.0.0' });
   
       await client.connect(transport);
       this.clients.set(serverName, client);
