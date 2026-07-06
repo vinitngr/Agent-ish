@@ -24,6 +24,7 @@ class Logger {
   private level: LogLevel = 'warn';
   private namespace: string;
   private handler: LogHandler;
+  private children: Logger[] = [];
 
   constructor(namespace: string = 'agent') {
     this.namespace = namespace;
@@ -45,12 +46,16 @@ class Logger {
 
   setLevel(level: LogLevel): void {
     this.level = level;
+    for (const child of this.children) {
+      child.setLevel(level);
+    }
   }
 
   child(namespace: string): Logger {
     const child = new Logger(`${this.namespace}:${namespace}`);
     child.level = this.level;
     child.handler = this.handler;
+    this.children.push(child);
     return child;
   }
 

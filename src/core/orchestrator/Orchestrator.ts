@@ -7,6 +7,7 @@ import { ToolExecutor } from './ToolExecutor';
 import { IPlanner } from './Planner';
 import { ISessionStore } from '../runtime/SessionStore';
 import { ExecutionConfig } from './ExecutionConfig';
+import { AgentExecuteOptions } from '../types/ExecuteOptions';
 
 const log = logger.child('orchestrator');
 
@@ -45,7 +46,7 @@ export class Orchestrator {
     log.info(`Orchestrator planner updated to: ${planner.constructor.name}`);
   }
 
-  async handleInput(input: string, options?: { model?: string; sessionId?: string; metadata?: Record<string, any>; systemPrompt?: string; [key: string]: any }): Promise<string> {
+  async handleInput(input: string, options?: AgentExecuteOptions): Promise<string> {
     const explicitId = options?.sessionId || options?.session_id;
     const sessionResult = await this.getOrCreateSession(explicitId);
     const session = sessionResult.session;

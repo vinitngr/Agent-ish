@@ -25,7 +25,7 @@ export class AgentLLMAdapter implements ILLMProvider {
 
     for (const modelId of attempts) {
       try {
-        return await this.executeChat(messages, modelId);
+        return await this.executeChat(messages, modelId, options);
       } catch (error) {
         lastError = error;
         console.warn(`Model ${modelId} failed, trying next fallback... Error: ${error instanceof Error ? error.message : String(error)}`);
@@ -35,7 +35,7 @@ export class AgentLLMAdapter implements ILLMProvider {
     throw new Error(`All models failed. Last error: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
   }
 
-  private async executeChat(messages: LLMMessage[], modelSpec: string): Promise<LLMResponse> {
+  private async executeChat(messages: LLMMessage[], modelSpec: string, options?: LLMRequestOptions): Promise<LLMResponse> {
     let providerId = this.defaultProvider;
     let modelId = this.defaultModel;
 
@@ -58,13 +58,15 @@ export class AgentLLMAdapter implements ILLMProvider {
         toolCalls: m.toolCalls,
         toolCallId: m.toolCallId
       })),
+      tools: options?.tools
     };
 
     const response = await provider.generate(request);
 
     return {
       content: response.content,
-      usage: response.usage
+      usage: response.usage,
+      toolCalls: response.toolCalls
     };
   }
 

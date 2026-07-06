@@ -7,6 +7,7 @@ import { Context } from '../runtime/Context';
 import { ISessionStore } from '../runtime/SessionStore';
 import { Session } from '../runtime/Session';
 import { ExecutionState } from './ExecutionState';
+import { AgentExecuteOptions } from '../types/ExecuteOptions';
 
 const log = logger.child('planner-controller');
 
@@ -19,9 +20,9 @@ export class PlannerController {
     private config: ExecutionConfig
   ) {}
 
-  async run(session: Session, context: Context, options?: Record<string, any>): Promise<string> {
-    const maxIterations = this.config.limits.safety.maxIterations;
-    const timeoutSeconds = this.config.limits.safety.maxRunTimeSeconds;
+  async run(session: Session, context: Context, options?: AgentExecuteOptions): Promise<string> {
+    const maxIterations = options?.maxIterations || this.config.limits.safety.maxIterations;
+    const timeoutSeconds = options?.timeoutSeconds || this.config.limits.safety.maxRunTimeSeconds;
     const retryConfig = this.config.controller.retryLogic;
 
     const plannerModel = options?.model || this.config.models.roles.planner;
@@ -45,7 +46,7 @@ export class PlannerController {
       });
 
       return await Promise.race([
-        this.executionLoop(state, context, maxIterations, retryConfig),
+        this.executionLoop(state, context, maxIterations, retryConfig, options),
         timeoutPromise
       ]);
     } catch (error: any) {
@@ -61,7 +62,8 @@ export class PlannerController {
     state: ExecutionState,
     context: Context,
     maxIterations: number,
-    retryConfig: ExecutionConfig['controller']['retryLogic']
+    retryConfig: ExecutionConfig['controller']['retryLogic'],
+    options?: AgentExecuteOptions
   ): Promise<string> {
     const session = state.session!;
 
@@ -78,6 +80,10 @@ export class PlannerController {
       }
 
       if (plan.kind === 'response') {
+        if (options?.onStep) {
+          options.onStep({ type: 'think', message: plan.message || '' });
+        }
+        
         session.addMessage({
           role: 'assistant',
           content: plan.message || '',
@@ -95,6 +101,10 @@ export class PlannerController {
           return 'Error: Detected repeated tool calls. Stopping to prevent infinite loop.';
         }
 
+        if (options?.onStep) {
+          options.onStep({ type: 'action', tool: plan.toolCalls.map((c: any) => c.name).join(', ') });
+        }
+
         this.trackToolCalls(plan.toolCalls, state.recentToolCalls);
 
         session.addMessage({
@@ -106,7 +116,8 @@ export class PlannerController {
 
         // The python version expects executeBatch to return results array
         const results = await this.toolExecutor.executeBatch(
-          plan.toolCalls as any
+          plan.toolCalls as any,
+          options
         );
 
         for (const res of results) {
@@ -137,17 +148,18 @@ export class PlannerController {
 
   private async planWithRetry(
     session: Session,
-    options: Record<string, any>,
+    options: AgentExecuteOptions,
     retryConfig: ExecutionConfig['controller']['retryLogic']
   ): Promise<PlanResult> {
     let lastError: string | null = null;
     const fallbackModel = this.config.models.roles.fallback;
+    const maxRetries = options?.maxRetries !== undefined ? options.maxRetries : retryConfig.maxRetries;
 
-    for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const currentOptions = { ...options };
 
-        if (attempt > 0 && attempt === retryConfig.maxRetries) {
+        if (attempt > 0 && attempt === maxRetries) {
           log.warn(`Switching to fallback model: ${fallbackModel}`);
           currentOptions.model = fallbackModel;
         }
@@ -157,7 +169,7 @@ export class PlannerController {
         if (plan.kind === 'error' && this.isRetryable(plan.error, retryConfig)) {
           lastError = plan.error || 'Unknown error';
           const delay = this.getBackoffDelay(attempt, retryConfig);
-          log.warn(`Retrying in ${delay}ms (attempt ${attempt + 1}/${retryConfig.maxRetries + 1})`);
+          log.warn(`Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
           this.eventBus.emit('planner:retry' as any, session.id, attempt + 1, plan.error);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
@@ -166,7 +178,7 @@ export class PlannerController {
         return plan;
       } catch (e: any) {
         lastError = e.message || String(e);
-        if (attempt < retryConfig.maxRetries) {
+        if (attempt < maxRetries) {
           const delay = this.getBackoffDelay(attempt, retryConfig);
           log.warn(`Exception during planning, retrying in ${delay}ms: ${lastError}`);
           await new Promise(resolve => setTimeout(resolve, delay));

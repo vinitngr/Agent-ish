@@ -38,11 +38,11 @@ export class ToolExecutor {
     this.middlewares = middlewares;
   }
 
-  async executeBatch(calls: ToolCall[]): Promise<ExecutorResult[]> {
-    return Promise.all(calls.map(call => this.execute(call)));
+  async executeBatch(calls: ToolCall[], options?: any): Promise<ExecutorResult[]> {
+    return Promise.all(calls.map(call => this.execute(call, options)));
   }
 
-  async execute(call: ToolCall): Promise<ExecutorResult> {
+  async execute(call: ToolCall, options?: any): Promise<ExecutorResult> {
     const toolName = call.name;
     const callId = call.id;
     
@@ -64,6 +64,23 @@ export class ToolExecutor {
 
         const result = await this.executeSingle(call);
         this.resetCircuit(toolName);
+        
+        // Handle maxToolResponseLength truncation
+        const maxLength = options?.maxToolResponseLength;
+        if (maxLength) {
+           let dataStr = typeof result === 'string' ? result : (typeof result?.data === 'string' ? result.data : null);
+           
+           if (dataStr && dataStr.length > maxLength) {
+               log.warn(`Truncating tool ${toolName} response from ${dataStr.length} to ${maxLength} chars`);
+               dataStr = dataStr.substring(0, maxLength) + `\n... [TRUNCATED TO ${maxLength} CHARS TO SAVE CONTEXT]`;
+               if (typeof result === 'string') {
+                   result = dataStr as any;
+               } else if (result) {
+                   result.data = dataStr;
+               }
+           }
+        }
+
         return { callId, toolName, result };
 
       } catch (error) {

@@ -29,6 +29,7 @@ export interface CompletionResponse {
     completionTokens: number;
     totalTokens: number;
   };
+  toolCalls?: ToolCall[];
 }
 
 export interface CompletionChunk {

@@ -16,6 +16,7 @@ import { IPlanner } from './orchestrator/Planner';
 import { ISessionStore, MemorySessionStore } from './runtime/SessionStore';
 import { DATAULT_AGENT_CONFIG } from './types/AgentConfig';
 import { ToolCall } from './types/Provider';
+import { AgentExecuteOptions } from './types/ExecuteOptions';
 
 const log = logger.child('agent');
 
@@ -39,7 +40,7 @@ export class Agent {
   private modes = new Map<string, any>();
   private defaultMode: string = 'default';
 
-  constructor(private configDir: string) {
+  constructor(private configDir: string = './config') {
     this.eventBus = new EventBus<AgentEvents>();
     this.lifecycle = new Lifecycle(this.eventBus);
     this.configLoader = new ConfigLoader(configDir);
@@ -239,7 +240,7 @@ export class Agent {
     return this.processInput(input);
   }
 
-  async execute(input: string, options?: { model?: string; sessionId?: string; metadata?: Record<string, any>; [key: string]: any }): Promise<string> {
+  async execute(input: string, options?: AgentExecuteOptions): Promise<string> {
     if (!this.orchestrator) await this.boot();
    
     return this.processInput(input, options);
