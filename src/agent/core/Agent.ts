@@ -10,10 +10,10 @@ import { SkillRegistry } from '../registry/SkillRegistry';
 import { ProviderRegistry } from '../registry/ProviderRegistry';
 import { PluginRegistry } from '../registry/PluginRegistry';
 import { InterfaceRegistry } from '../registry/InterfaceRegistry';
-import { Orchestrator } from '../orchestrator/Orchestrator';
-import { LLMPlanner } from '../orchestrator/LLMPlanner';
-import { ToolExecutor } from '../orchestrator/ToolExecutor';
-import { IPlanner } from '../orchestrator/Planner';
+import { Orchestrator } from '../../core/orchestrator/Orchestrator';
+import { LLMPlanner } from '../../core/orchestrator/LLMPlanner';
+import { ToolExecutor } from '../../core/orchestrator/ToolExecutor';
+import { IPlanner } from '../../core/orchestrator/Planner';
 import { ISessionStore, MemorySessionStore } from '../runtime/SessionStore';
 import { ConsentManager } from '../consent/ConsentManager';
 import { ConsentDecision } from '../../types/Consent';
@@ -160,7 +160,7 @@ export class Agent {
   }
 
   async loadSkillsFrom(directory: string, options: { monitoring?: boolean } = {}): Promise<void> {
-    const { MarkdownSkillLoader } = await import('../../skills/loaders/MarkdownSkillLoader');
+    const { MarkdownSkillLoader } = await import('../skills/loaders/MarkdownSkillLoader');
     const skillLoader = new MarkdownSkillLoader();
     const path = await import('path');
     const absoluteDir = path.resolve(process.cwd(), directory);

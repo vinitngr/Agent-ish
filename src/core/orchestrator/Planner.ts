@@ -1,0 +1,12 @@
+import { Session } from '../../agent/runtime/Session';
+import { ToolCall } from '../../types/Provider';
+
+export type PlanResult =
+  | { kind: 'action'; toolCalls: ToolCall[] }
+  | { kind: 'response'; message: string }
+  | { kind: 'error'; error: string };
+
+export interface IPlanner {
+  plan(session: Session, options?: Record<string, any>): Promise<PlanResult>;
+  onToolResults?(session: Session, options?: Record<string, any>): Promise<void>;
+}

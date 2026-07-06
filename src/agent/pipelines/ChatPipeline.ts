@@ -1,5 +1,5 @@
 import { BasePipeline } from './BasePipeline';
-import { Orchestrator } from '../orchestrator/Orchestrator';
+import { Orchestrator } from '../../core/orchestrator/Orchestrator';
 import { logger } from '../../utils/logger';
 
 const log = logger.child('pipeline:chat');

@@ -1,7 +1,6 @@
 import { Agent } from './agent/core/Agent';
 import { CorePlugin } from './plugins/CorePlugin';
 import { SocketPlugin } from './plugins/SocketPlugin';
-import { McpPlugin } from './plugins/McpPlugin';
 import { logger } from './utils/logger';
 import { LLMPlugin } from './plugins/LLMPlugin';
 import minimist from 'minimist';
@@ -23,7 +22,6 @@ async function createAgent(configDir: string): Promise<Agent> {
 
   await agent.use(new CorePlugin());
   await agent.use(new LLMPlugin());
-  await agent.use(new McpPlugin());
   await agent.use(new SocketPlugin());
   await agent.use(new SlashCommandPlugin());
   await agent.use(new ShellCommandPlugin({ allowedInterfaces: ['socket', 'terminal'] }));

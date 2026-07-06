@@ -1,17 +1,18 @@
 
 import { Agent } from '../agent/core/Agent';
 import { IPlugin } from '../types/Plugin';
-import { LLMService, JsonFileConfigStore, GeminiProvider, OpenAIProvider } from '../core/llm';
-import { AgentLLMAdapter } from '../integration/AgentLLMAdapter';
-import * as path from 'path';
+import { LLMService } from '../core/llm';
+import { GeminiProvider } from '../providers/llm/GeminiProvider';
+import { OpenAIProvider } from '../providers/llm/OpenAIProvider';
+import { EnvConfigStore } from '../core/llm/store/EnvConfigStore';
+import { AgentLLMAdapter } from '../core/llm/adapters/AgentLLMAdapter';
 
 export class LLMPlugin implements IPlugin {
   name = 'llm-core';
   version = '1.0.0';
 
   async register(agent: Agent, options?: any): Promise<void> {
-    const configPath = path.resolve(process.cwd(), 'config/providers.json');
-    const store = new JsonFileConfigStore(configPath);
+    const store = options?.store || new EnvConfigStore();
     const service = new LLMService(store);
 
     service.registerProvider(GeminiProvider);

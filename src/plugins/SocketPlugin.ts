@@ -1,6 +1,6 @@
 import { IPlugin } from '../types/Plugin';
 import { Agent } from '../agent/core/Agent';
-import { SocketInterface } from '../interfaces/socket/SocketInterface';
+import { SocketInterface } from '../interfaces/SocketInterface';
 
 export class SocketPlugin implements IPlugin {
   name = 'socket-interface';

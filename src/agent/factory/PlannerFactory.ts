@@ -1,5 +1,5 @@
-import { IPlanner } from '../orchestrator/Planner';
-import { LLMPlanner } from '../orchestrator/LLMPlanner';
+import { IPlanner } from '../../core/orchestrator/Planner';
+import { LLMPlanner } from '../../core/orchestrator/LLMPlanner';
 import { Context } from '../runtime/Context';
 import { EventBus, AgentEvents } from '../../utils/events';
 import { DATAULT_AGENT_CONFIG } from '../../types/AgentConfig';

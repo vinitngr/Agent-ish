@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
 import { IContext } from '../../types/Runtime';
-import { BaseInterface } from '../base/Interface';
 import { logger } from '../../utils/logger';
 import { SlashCommand, CommandContext } from './commands/types';
 import { defaultCommands } from './commands';
@@ -13,6 +12,7 @@ import { ToolHistoryInspector } from './widgets/ToolHistoryInspector';
 import { ToolResult } from '../../types/Tool';
 import * as fs from 'fs';
 import * as path from 'path';
+import { BaseInterface } from '@interfaces/base';
 
 // const log = logger.child('terminal');
 

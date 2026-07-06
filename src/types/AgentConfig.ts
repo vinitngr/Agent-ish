@@ -4,6 +4,7 @@ export interface PlannerConfig {
   temperature?: number;
   maxSteps: number;
   stopSequences?: string[];
+  maxHistoryMessages?: number;
 }
 
 export interface ToolConfig {

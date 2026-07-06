@@ -16,7 +16,7 @@
     "moduleResolution": "node",
     "baseUrl": "./src",
     "paths": {
-      "@types/*": ["types/*"],
+      "@app-types/*": ["types/*"],
       "@agent/*": ["agent/*"],
       "@tools/*": ["tools/*"],
       "@skills/*": ["skills/*"],

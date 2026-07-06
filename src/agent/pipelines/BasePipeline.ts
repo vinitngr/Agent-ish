@@ -1,4 +1,4 @@
-import { Orchestrator } from '../orchestrator/Orchestrator';
+import { Orchestrator } from '../../core/orchestrator/Orchestrator';
 
 export abstract class BasePipeline {
   name: string = '';

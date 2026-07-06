@@ -19,7 +19,7 @@ export class CorePlugin implements IPlugin {
   }
 
   private async loadSkills(agent: Agent, options?: any): Promise<void> {
-    const { MarkdownSkillLoader } = await import('../skills/loaders/MarkdownSkillLoader');
+    const { MarkdownSkillLoader } = await import('../agent/skills/loaders/MarkdownSkillLoader');
     const skillLoader = new MarkdownSkillLoader();
     
     const skillsDir = options?.skillsDir || agent.config.modules?.skillsDir || './skills';
@@ -36,10 +36,10 @@ export class CorePlugin implements IPlugin {
 
     if (agent.config.monitoring?.skills !== false) {
       skillLoader.watch(absoluteDir, 
-        (skill) => {
+        (skill: any) => {
           agent.skills.register(skill);
         },
-        (name) => {
+        (name: string) => {
           agent.skills.unregister(name);
         }
       );

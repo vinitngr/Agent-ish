@@ -1,6 +1,6 @@
 import { Agent } from '../agent/core/Agent';
 import { IPlugin } from '../types/Plugin';
-import { HttpInterface } from '../interfaces/http/HttpInterface';
+import { HttpInterface } from '../interfaces/HttpInterface';
 
 export class HttpPlugin implements IPlugin {
   name = 'http';
