@@ -1,5 +1,6 @@
 export interface AgentExecuteOptions {
-  // 1. Session & Memory
+  // 1. Core Routing & Session
+  pipeline?: string;
   sessionId?: string;
   historyLimit?: number;
   

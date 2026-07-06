@@ -37,8 +37,8 @@ export class Agent {
   private sessionStore: ISessionStore;
   private middlewares: Array<(call: ToolCall) => boolean | string | Promise<boolean | string>> = [];
   
-  private modes = new Map<string, any>();
-  private defaultMode: string = 'default';
+  private pipelines = new Map<string, any>();
+  private defaultPipeline: string = 'default';
 
   constructor(private configDir: string = './config') {
     this.eventBus = new EventBus<AgentEvents>();
@@ -56,6 +56,10 @@ export class Agent {
     this.interfaces = new InterfaceRegistry(this.eventBus);
     this.pluginRegistry = new PluginRegistry(this, this.eventBus);
     this.sessionStore = new MemorySessionStore();
+  }
+
+  get sessions(): ISessionStore {
+    return this.sessionStore;
   }
 
 
@@ -226,13 +230,13 @@ export class Agent {
     this.context.registerExtension(name, instance);
   }
 
-  registerMode(name: string, pipeline: any): void {
-    this.modes.set(name, pipeline);
-    log.info(`Mode registered: ${name}`);
+  registerPipeline(name: string, pipeline: any): void {
+    this.pipelines.set(name, pipeline);
+    log.info(`Pipeline registered: ${name}`);
   }
 
-  setDefaultMode(mode: string): void {
-    this.defaultMode = mode;
+  setDefaultPipeline(pipeline: string): void {
+    this.defaultPipeline = pipeline;
   }
 
   async handleInput(input: string): Promise<string> {
@@ -254,8 +258,8 @@ export class Agent {
       }
     }
     
-    const mode = options?.mode || this.defaultMode;
-    const pipeline = this.modes.get(mode);
+    const pipelineName = options?.pipeline || this.defaultPipeline;
+    const pipeline = this.pipelines.get(pipelineName);
     if (pipeline) {
       return pipeline.execute(this.orchestrator, input, options);
     }

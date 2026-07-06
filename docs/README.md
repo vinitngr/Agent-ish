@@ -1,6 +1,4 @@
-# Agent-ish Developer Documentation
-
-Welcome to the documentation for the Agent-ish core. This project is built as a highly agnostic, modular AI engine.
+# Agent-ish
 
 ## 🧭 Navigation
 
