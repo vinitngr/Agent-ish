@@ -1,11 +1,11 @@
 import { SessionMessage } from '../../types/Runtime';
-import { ISession } from '../runtime/SessionStore';
+import { Session } from '../runtime/Session';
 
 export class ExecutionState {
   id: string = '';
   sessionId: string = '';
   
-  session: ISession | null = null;
+  session: Session | null = null;
   
   iteration: number = 0;
   recentToolCalls: string[] = [];

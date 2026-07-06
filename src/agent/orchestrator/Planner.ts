@@ -7,6 +7,6 @@ export type PlanResult =
   | { kind: 'error'; error: string };
 
 export interface IPlanner {
-  plan(session: Session): Promise<PlanResult>;
-  onToolResults?(session: Session): Promise<void>;
+  plan(session: Session, options?: Record<string, any>): Promise<PlanResult>;
+  onToolResults?(session: Session, options?: Record<string, any>): Promise<void>;
 }

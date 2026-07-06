@@ -4,7 +4,8 @@ import { IPlanner, PlanResult } from './Planner';
 import { ToolExecutor } from './ToolExecutor';
 import { ExecutionConfig } from './ExecutionConfig';
 import { Context } from '../runtime/Context';
-import { ISessionStore, ISession } from '../runtime/SessionStore';
+import { ISessionStore } from '../runtime/SessionStore';
+import { Session } from '../runtime/Session';
 import { ExecutionState } from './ExecutionState';
 
 const log = logger.child('planner-controller');
@@ -18,7 +19,7 @@ export class PlannerController {
     private config: ExecutionConfig
   ) {}
 
-  async run(session: ISession, context: Context, options?: Record<string, any>): Promise<string> {
+  async run(session: Session, context: Context, options?: Record<string, any>): Promise<string> {
     const maxIterations = this.config.limits.safety.maxIterations;
     const timeoutSeconds = this.config.limits.safety.maxRunTimeSeconds;
     const retryConfig = this.config.controller.retryLogic;
@@ -82,8 +83,7 @@ export class PlannerController {
           content: plan.message || '',
           timestamp: new Date()
         });
-        // await this.sessionStore.set(session); // Assume set exists or save
-        return plan.message || '';
+                return plan.message || '';
       }
 
       if (plan.kind === 'action' && plan.toolCalls) {
@@ -106,8 +106,7 @@ export class PlannerController {
 
         // The python version expects executeBatch to return results array
         const results = await this.toolExecutor.executeBatch(
-          plan.toolCalls,
-          this.config.toolExecution as any
+          plan.toolCalls as any
         );
 
         for (const res of results) {
@@ -117,12 +116,13 @@ export class PlannerController {
             toolCallId: res.callId,
             metadata: {
               toolName: res.toolName,
-              ...(res.metadata || {})
+              ...((res as any).metadata || {})
             },
             timestamp: new Date()
           });
         }
 
+        await this.sessionStore.set(session.id, session);
         this.eventBus.emit('orchestrator:observe' as any, session.id, results);
         
         if (this.planner.onToolResults) {
@@ -136,7 +136,7 @@ export class PlannerController {
   }
 
   private async planWithRetry(
-    session: ISession,
+    session: Session,
     options: Record<string, any>,
     retryConfig: ExecutionConfig['controller']['retryLogic']
   ): Promise<PlanResult> {
