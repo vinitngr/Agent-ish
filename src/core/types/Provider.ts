@@ -29,6 +29,16 @@ export interface LLMResponse {
   metadata?: Record<string, unknown>;
 }
 
+export interface LLMResponseChunk {
+  content?: string;
+  toolCalls?: ToolCall[];
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
 export interface LLMRequestOptions {
   model?: string;
   temperature?: number;
@@ -47,6 +57,7 @@ export interface ILLMProvider {
   name: string;
   initialize(config: ProviderConfig): Promise<void>;
   chat(messages: LLMMessage[], options?: LLMRequestOptions): Promise<LLMResponse>;
+  chatStream?(messages: LLMMessage[], options?: LLMRequestOptions): AsyncGenerator<LLMResponseChunk>;
   shutdown(): Promise<void>;
 }
 

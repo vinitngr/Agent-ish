@@ -94,8 +94,76 @@ export class GeminiProvider extends BaseProvider {
   }
 
   async *stream(request: CompletionRequest): AsyncGenerator<CompletionChunk> {
-     // Stream not fully implemented with tools yet for this demo
-     yield { content: 'Stream not implemented for tools', delta: 'Stream not implemented for tools' };
+    const model = this.getModel(request);
+    
+    const contents: Content[] = [];
+    for (const msg of request.messages) {
+      if (msg.role === 'system') continue;
+      
+      const parts: Part[] = [];
+      if (msg.role === 'tool') {
+        parts.push({
+          functionResponse: {
+            name: (msg.toolCallId || 'unknown').replace(/\./g, '_'),
+            response: { result: msg.content }
+          }
+        });
+        contents.push({ role: 'user', parts });
+      } else if (msg.role === 'assistant') {
+        if (msg.toolCalls && msg.toolCalls.length > 0) {
+          msg.toolCalls.forEach(tc => {
+            parts.push({
+              functionCall: {
+                name: tc.name.replace(/\./g, '_'),
+                args: tc.arguments
+              }
+            });
+          });
+        }
+        if (msg.content) {
+          parts.push({ text: msg.content });
+        }
+        contents.push({ role: 'model', parts });
+      } else {
+        parts.push({ text: msg.content });
+        contents.push({ role: 'user', parts });
+      }
+    }
+
+    const result = await model.generateContentStream({ contents });
+    
+    let finalToolCalls: ToolCall[] = [];
+    
+    for await (const chunk of result.stream) {
+      let chunkText = '';
+      try {
+        chunkText = chunk.text();
+      } catch (e) {
+        // No text in this chunk
+      }
+      
+      const functionCalls = typeof chunk.functionCalls === 'function'
+        ? chunk.functionCalls()
+        : chunk.functionCalls;
+        
+      if (functionCalls && Array.isArray(functionCalls) && functionCalls.length > 0) {
+        functionCalls.forEach((fc: any) => {
+          finalToolCalls.push({
+            id: fc.name,
+            name: fc.name.replace(/_/g, '.'),
+            arguments: fc.args as Record<string, unknown>
+          });
+        });
+      }
+
+      if (chunkText) {
+        yield { content: chunkText, delta: chunkText };
+      }
+    }
+    
+    if (finalToolCalls.length > 0) {
+      yield { toolCalls: finalToolCalls };
+    }
   }
 
   private getModel(request: CompletionRequest): GenerativeModel {

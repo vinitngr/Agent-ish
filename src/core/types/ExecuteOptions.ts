@@ -23,7 +23,7 @@ export interface AgentExecuteOptions {
   maxRetries?: number;
   
   // 6. UI Streaming
-  onStep?: (stepInfo: { type: string, message?: string, tool?: string }) => void;
+  onStep?: (stepInfo: { type: string, message?: string, tool?: string, result?: any }) => void;
   onStream?: (chunk: string) => void;
   
   // Dynamic extra options

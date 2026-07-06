@@ -60,4 +60,35 @@ export abstract class BaseProvider implements ILLMProvider {
       usage: response.usage
     };
   }
+
+  async *chatStream(messages: any[], options?: any): AsyncGenerator<any> {
+    const request: CompletionRequest = {
+      model: options?.model,
+      messages: messages.map(m => ({
+        role: m.role,
+        content: m.content,
+        toolCalls: m.toolCalls,
+        toolCallId: m.toolCallId
+      })),
+      maxTokens: options?.maxTokens,
+      temperature: options?.temperature,
+      tools: options?.tools?.map((t: any) => ({
+        type: 'function',
+        function: {
+          name: t.name,
+          description: t.description,
+          parameters: t.parameters
+        }
+      }))
+    };
+
+    const stream = this.stream(request);
+    
+    for await (const chunk of stream) {
+      yield {
+        content: chunk.content,
+        toolCalls: chunk.toolCalls
+      };
+    }
+  }
 }

@@ -57,12 +57,38 @@ export class LLMPlanner implements IPlanner {
       log.info('Thinking...');
       this.eventBus.emit('orchestrator:think', session.id);
       
-      const response = await llm.chat(messages, { 
+      const requestOptions = {
         tools: toolDefs,
         model,
         temperature: options?.temperature,
         maxTokens: options?.maxOutputTokens
-      });
+      };
+
+      if (options?.onStream && typeof llm.chatStream === 'function') {
+        const stream = llm.chatStream(messages, requestOptions);
+        let fullContent = '';
+        let finalToolCalls: any[] = [];
+
+        for await (const chunk of stream) {
+          if (chunk.content) {
+            fullContent += chunk.content;
+            options.onStream(chunk.content);
+          }
+          if (chunk.toolCalls) {
+            finalToolCalls = chunk.toolCalls;
+          }
+        }
+
+        if (finalToolCalls && finalToolCalls.length > 0) {
+          log.info(`Plan: Call tools ${finalToolCalls.map(c => c.name).join(', ')}`);
+          return { kind: 'action', toolCalls: finalToolCalls };
+        }
+
+        log.info('Plan: Respond to user');
+        return { kind: 'response', message: fullContent };
+      }
+
+      const response = await llm.chat(messages, requestOptions);
 
       if (response.toolCalls && response.toolCalls.length > 0) {
         log.info(`Plan: Call tools ${response.toolCalls.map(c => c.name).join(', ')}`);

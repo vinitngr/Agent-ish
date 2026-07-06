@@ -131,6 +131,14 @@ export class PlannerController {
             },
             timestamp: new Date()
           });
+
+          if (options?.onStep) {
+            options.onStep({ 
+              type: 'result', 
+              tool: res.toolName, 
+              result: res.result 
+            });
+          }
         }
 
         await this.sessionStore.set(session.id, session);
