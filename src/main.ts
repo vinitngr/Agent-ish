@@ -1,6 +1,5 @@
 import { Agent } from './agent/core/Agent';
 import { CorePlugin } from './plugins/CorePlugin';
-// import { TerminalPlugin } from './plugins/TerminalPlugin';
 import { SocketPlugin } from './plugins/SocketPlugin';
 import { McpPlugin } from './plugins/McpPlugin';
 import { logger } from './utils/logger';
@@ -8,36 +7,48 @@ import { LLMPlugin } from './plugins/LLMPlugin';
 import minimist from 'minimist';
 import { SlashCommandPlugin } from './plugins/SlashCommandPlugin';
 import { ShellCommandPlugin } from './plugins/ShellCommandPlugin';
+import * as path from 'path';
 
 const log = logger.child('main');
-async function main(): Promise<void> {
-  const agent = new Agent('./config');
+
+function resolveConfigPaths(): string {
+  return path.resolve(process.cwd(), 'config');
+}
+
+async function createAgent(configDir: string): Promise<Agent> {
+  log.info(`Initializing Agent...`);
+  const agent = new Agent(configDir);
 
   await agent.use(new CorePlugin());
   await agent.use(new LLMPlugin());
   await agent.use(new McpPlugin());
-  // await agent.use(new TerminalPlugin());
   await agent.use(new SocketPlugin());
   await agent.use(new SlashCommandPlugin());
   await agent.use(new ShellCommandPlugin({ allowedInterfaces: ['socket', 'terminal'] }));
   
   await agent.loadPluginsFrom('./custom_plugins', { monitoring: true });
   
-  await agent.init();
-  await agent.boot();
-
-  setupObservability(agent);
-  setupSecurity(agent);
-  setupShutdownHandlers(agent);
-
-  if (!await handleCliExecution(agent)) {
-    await agent.run();
-  }
+  return agent;
 }
 
-function setupObservability(agent: Agent): void {
-  agent.on('tool:call:start', (call) => {
-    log.info(`🎯 Executing tool: ${call.name}`);
+async function setupAgent(agent: Agent, defaultMode: string = 'default'): Promise<void> {
+  await agent.init();
+
+  // Example of registering an extension:
+  // agent.registerExtension("credentials", new GatewayCredentialClient());
+
+  // Example of registering a mode (pipeline):
+  // agent.registerMode("test", new ChatPipeline());
+  // agent.registerMode("planner", new AgentPipeline());
+  
+  agent.setDefaultMode(defaultMode);
+
+  setupSecurity(agent);
+
+  await agent.boot();
+
+  agent.on('tool:call:start', (call: any) => {
+    log.debug(`🎯 Executing tool: ${call.name}`);
   });
 
   const snapshot = agent.inspect();
@@ -45,7 +56,7 @@ function setupObservability(agent: Agent): void {
 }
 
 function setupSecurity(agent: Agent): void {
-  agent.addMiddleware(async (call) => {
+  agent.addMiddleware(async (call: any) => {
     if (call.name === 'delete_file') {
       log.warn(`⚠️ Blocked restricted tool: ${call.name}`);
       return false;
@@ -91,6 +102,19 @@ function setupShutdownHandlers(agent: Agent): void {
 
   process.on('SIGINT', () => handleShutdown('SIGINT'));
   process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+}
+
+async function main(): Promise<void> {
+  const configDir = resolveConfigPaths();
+  const agent = await createAgent(configDir);
+  
+  await setupAgent(agent, 'default');
+  
+  setupShutdownHandlers(agent);
+
+  if (!await handleCliExecution(agent)) {
+    await agent.run();
+  }
 }
 
 main().catch((err) => {

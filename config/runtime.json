@@ -1,12 +1,12 @@
 {
-  "maxConcurrency": 4,
+  "maxConcurrency": 5,
   "timeout": 30000,
   "retryAttempts": 3,
-  "lazyLoad": true,
+  "lazyLoad": false,
   "storage": {
-    "memory": "storage/memory",
-    "logs": "storage/logs",
-    "cache": "storage/cache"
+    "memory": "in-memory",
+    "logs": "file",
+    "cache": "file"
   },
-  "showToolResults": false
+  "showToolResults": true
 }

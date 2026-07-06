@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as dotenv from 'dotenv';
 import { AgentConfig, RuntimeConfig, ProvidersConfig } from '../../types/Runtime';
 import {
   agentConfigSchema,
@@ -22,29 +23,63 @@ export class ConfigLoader {
 
   constructor(configDir: string) {
     this.configDir = path.resolve(configDir);
+    
+    const envPath = path.join(process.cwd(), '.env');
+    const localEnvPath = path.join(process.cwd(), '.env.local');
+    
+    if (fs.existsSync(localEnvPath)) {
+      dotenv.config({ path: localEnvPath });
+    }
+    if (fs.existsSync(envPath)) {
+      dotenv.config({ path: envPath });
+    }
   }
 
   load(): FullConfig {
-    log.info(`Loading config from ${this.configDir}`);
+    log.info(`Loading config from ${this.configDir} (with .env support)`);
 
-    const agent = this.loadFile<AgentConfig>('default.json', agentConfigSchema);
-    const runtime = this.loadFile<RuntimeConfig>('runtime.json', runtimeConfigSchema);
-    const providers = this.loadFile<ProvidersConfig>('providers.json', providersConfigSchema);
+    const agent = this.loadFile<AgentConfig>('default.json', agentConfigSchema, {
+      agent: { name: 'agent-ish', version: '1.0.0' },
+      logging: { level: 'info', directory: './logs' },
+      modules: { tools: [], skills: [], interfaces: ['terminal'] },
+      monitoring: { skills: true, config: true, plugins: false }
+    });
+
+    const runtime = this.loadFile<RuntimeConfig>('runtime.json', runtimeConfigSchema, {
+      maxConcurrency: 5,
+      timeout: 30000,
+      retryAttempts: 3,
+      lazyLoad: false,
+      storage: { memory: 'in-memory', logs: 'file', cache: 'file' },
+      showToolResults: true
+    });
+
+    const providers = this.loadFile<ProvidersConfig>('providers.json', providersConfigSchema, {
+      llm: { default: null, adapters: {} },
+      memory: { default: null, adapters: {} },
+      embeddings: { default: null, adapters: {} }
+    });
 
     log.info(`Config loaded: ${agent.agent.name} v${agent.agent.version}`);
 
     return { agent, runtime, providers };
   }
 
-  private loadFile<T>(filename: string, schema: { parse: (data: unknown) => T }): T {
+  private loadFile<T>(filename: string, schema: { parse: (data: unknown) => T }, defaultConfig: any): T {
     const filePath = path.join(this.configDir, filename);
 
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`Config file not found: ${filePath}`);
-    }
+    let parsed = defaultConfig;
 
-    const raw = fs.readFileSync(filePath, 'utf-8');
-    const parsed = JSON.parse(raw);
+    if (fs.existsSync(filePath)) {
+      try {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        parsed = JSON.parse(raw);
+      } catch (error) {
+        log.warn(`Failed to parse ${filename}, falling back to defaults. Error: ${error}`);
+      }
+    } else {
+      log.debug(`Config file not found: ${filePath}, using defaults.`);
+    }
 
     const envOverridden = this.applyEnvOverrides(parsed);
 

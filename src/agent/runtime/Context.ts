@@ -44,6 +44,10 @@ export class Context implements IContext {
     this.store.set(key, value);
   }
 
+  registerExtension<T>(name: string, instance: T): void {
+    this.set(name, instance);
+  }
+
   private generateId(): string {
     return `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   }

@@ -39,6 +39,9 @@ export class Agent {
   private customPlanner: IPlanner | null = null;
   private sessionStore: ISessionStore;
   private middlewares: Array<(call: ToolCall) => boolean | string | Promise<boolean | string>> = [];
+  
+  private modes = new Map<string, any>();
+  private defaultMode: string = 'default';
 
   constructor(private configDir: string) {
     this.eventBus = new EventBus<AgentEvents>();
@@ -250,6 +253,22 @@ export class Agent {
     this.inputInterceptors.push(fn);
   }
 
+  registerExtension(name: string, instance: any): void {
+    if (!this.context) {
+      throw new Error("Cannot register extensions before init(). Call agent.init() first.");
+    }
+    this.context.registerExtension(name, instance);
+  }
+
+  registerMode(name: string, pipeline: any): void {
+    this.modes.set(name, pipeline);
+    log.info(`Mode registered: ${name}`);
+  }
+
+  setDefaultMode(mode: string): void {
+    this.defaultMode = mode;
+  }
+
   async handleInput(input: string): Promise<string> {
     if (!this.orchestrator) throw new Error('Agent not booted');
     return this.processInput(input);
@@ -268,6 +287,13 @@ export class Agent {
         return result;
       }
     }
+    
+    const mode = options?.mode || this.defaultMode;
+    const pipeline = this.modes.get(mode);
+    if (pipeline) {
+      return pipeline.execute(this.orchestrator, input, options);
+    }
+    
     return this.orchestrator.handleInput(input, options);
   }
 

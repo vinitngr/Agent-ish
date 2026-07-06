@@ -1,16 +1,17 @@
 {
   "agent": {
     "name": "agent-ish",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "consent": false
   },
   "logging": {
     "level": "info",
-    "directory": "storage/logs"
+    "directory": "./logs"
   },
   "modules": {
-    "tools": ["system", "web"],
+    "tools": [],
     "skills": [],
-    "interfaces": ["terminal"]
+    "interfaces": ["terminal", "socket"]
   },
   "monitoring": {
     "skills": true,
