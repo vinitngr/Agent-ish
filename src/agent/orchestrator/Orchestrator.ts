@@ -96,4 +96,12 @@ export class Orchestrator {
   async listSessions(): Promise<string[]> {
     return this.sessionStore.list();
   }
+
+  getPlanner(): IPlanner {
+    return this.planner;
+  }
+
+  getSessionStore(): ISessionStore {
+    return this.sessionStore;
+  }
 }

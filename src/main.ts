@@ -7,6 +7,8 @@ import { LLMPlugin } from './plugins/LLMPlugin';
 import minimist from 'minimist';
 import { SlashCommandPlugin } from './plugins/SlashCommandPlugin';
 import { ShellCommandPlugin } from './plugins/ShellCommandPlugin';
+import { ChatPipeline } from './agent/pipelines/ChatPipeline';
+import { AgentPipeline } from './agent/pipelines/AgentPipeline';
 import * as path from 'path';
 
 const log = logger.child('main');
@@ -37,9 +39,8 @@ async function setupAgent(agent: Agent, defaultMode: string = 'default'): Promis
   // Example of registering an extension:
   // agent.registerExtension("credentials", new GatewayCredentialClient());
 
-  // Example of registering a mode (pipeline):
-  // agent.registerMode("test", new ChatPipeline());
-  // agent.registerMode("planner", new AgentPipeline());
+  agent.registerMode("chat", new ChatPipeline());
+  agent.registerMode("agent", new AgentPipeline());
   
   agent.setDefaultMode(defaultMode);
 
