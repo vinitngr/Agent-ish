@@ -1,8 +1,8 @@
-import { Context } from '../../agent/runtime/Context';
-import { Session } from '../../agent/runtime/Session';
-import { EventBus, AgentEvents } from '../../utils/events';
-import { logger } from '../../utils/logger';
-import { ControllerConfig } from '../../types/AgentConfig';
+import { Context } from '../runtime/Context';
+import { Session } from '../runtime/Session';
+import { EventBus, AgentEvents } from '../utils/events';
+import { logger } from '../utils/logger';
+import { ControllerConfig } from '../types/AgentConfig';
 import { IPlanner } from './Planner';
 import { ToolExecutor, ExecutorResult } from './ToolExecutor';
 

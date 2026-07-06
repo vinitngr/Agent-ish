@@ -1,3 +1,3 @@
-import { ITool } from '../../types/Tool';
+import { ITool } from '../../core/types/Tool';
 
 export const customTools: ITool[] = [];

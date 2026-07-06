@@ -1,7 +1,7 @@
 import { Server, Socket, createServer } from 'net';
 import { BaseInterface } from '@interfaces/base';
-import { Agent } from '@agent/core/Agent';
-import { IContext } from '@app-types/Runtime';
+import { Agent } from '../core/Agent';
+import { IContext } from '../core/types/Runtime';
 
 export class SocketInterface extends BaseInterface {
   name = 'socket';

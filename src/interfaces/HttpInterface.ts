@@ -1,6 +1,6 @@
 import * as http from 'http';
 import { BaseInterface } from '@interfaces/base';
-import { IContext } from '@app-types/Runtime';
+import { IContext } from '../core/types/Runtime';
 
 export class HttpInterface extends BaseInterface {
   name = 'http-raw';

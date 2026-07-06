@@ -1,6 +1,6 @@
 
-import { Agent } from '../agent/core/Agent';
-import { IPlugin } from '../types/Plugin';
+import { Agent } from '../core/Agent';
+import { IPlugin } from '../core/types/Plugin';
 import { LLMService } from '../core/llm';
 import { GeminiProvider } from '../providers/llm/GeminiProvider';
 import { OpenAIProvider } from '../providers/llm/OpenAIProvider';

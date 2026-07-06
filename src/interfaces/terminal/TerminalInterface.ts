@@ -1,18 +1,15 @@
 import { execSync } from 'child_process';
-import { IContext } from '../../types/Runtime';
-import { logger } from '../../utils/logger';
+import { IContext } from '../../core/types/Runtime';
+import { logger } from '../../core/utils/logger';
 import { SlashCommand, CommandContext } from './commands/types';
 import { defaultCommands } from './commands';
 import { CommandPicker } from './commands/CommandPicker';
-import { ConsentManager } from '../../agent/consent/ConsentManager';
-import { ConsentBox } from './widgets/ConsentBox';
-import { runTestDemo } from './demos/testDemo';
-import { ToolExecutionHistory } from '../../agent/history/ToolExecutionHistory';
+import { ToolExecutionHistory } from './history/ToolExecutionHistory';
 import { ToolHistoryInspector } from './widgets/ToolHistoryInspector';
-import { ToolResult } from '../../types/Tool';
+import { ToolResult } from '../../core/types/Tool';
 import * as fs from 'fs';
 import * as path from 'path';
-import { BaseInterface } from '@interfaces/base';
+import { BaseInterface } from '../base';
 
 // const log = logger.child('terminal');
 
@@ -77,10 +74,7 @@ export class TerminalInterface extends BaseInterface {
     this.running = true;
 
     // Register terminal-specific consent prompt
-    this.context!.consentManager.setPrompt('terminal', async (request) => {
-      const box = new ConsentBox(request);
-      return box.prompt();
-    });
+    
 
     this.printBanner();
     
@@ -89,7 +83,7 @@ export class TerminalInterface extends BaseInterface {
     if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
     const logFile = path.join(logDir, 'agent.log');
     
-    logger.setHandler((level, msg, ...args) => {
+    logger.setHandler((level: any, msg: any, ...args: any[]) => {
         const timestamp = new Date().toISOString();
         const line = `[${timestamp}] [${level.toUpperCase()}] ${msg} ${args.length ? JSON.stringify(args) : ''}\n`;
         fs.appendFileSync(logFile, line);
@@ -229,7 +223,7 @@ export class TerminalInterface extends BaseInterface {
       this.processing = true;
 
       if (fullInput.toLowerCase() === 'test' && this.context) {
-        await runTestDemo(this.context.consentManager, this.context);
+        /* test demo removed */
         this.processing = false;
         this.prompt();
         return;

@@ -1,6 +1,6 @@
-import { Agent } from '../agent/core/Agent';
-import { IPlugin } from '../types/Plugin';
-import { logger } from '../utils/logger';
+import { Agent } from '../core/Agent';
+import { IPlugin } from '../core/types/Plugin';
+import { logger } from '../core/utils/logger';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 

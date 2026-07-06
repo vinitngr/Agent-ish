@@ -1,11 +1,11 @@
-import { EventBus, AgentEvents } from '../../utils/events';
-import { logger } from '../../utils/logger';
+import { EventBus, AgentEvents } from '../utils/events';
+import { logger } from '../utils/logger';
 import { IPlanner, PlanResult } from './Planner';
 import { ToolExecutor } from './ToolExecutor';
 import { ExecutionConfig } from './ExecutionConfig';
-import { Context } from '../../agent/runtime/Context';
-import { ISessionStore } from '../../agent/runtime/SessionStore';
-import { Session } from '../../agent/runtime/Session';
+import { Context } from '../runtime/Context';
+import { ISessionStore } from '../runtime/SessionStore';
+import { Session } from '../runtime/Session';
 import { ExecutionState } from './ExecutionState';
 
 const log = logger.child('planner-controller');

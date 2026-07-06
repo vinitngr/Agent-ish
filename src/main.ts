@@ -1,13 +1,13 @@
-import { Agent } from './agent/core/Agent';
-import { CorePlugin } from './plugins/CorePlugin';
+import { Agent } from './core/Agent';
+import { CorePlugin } from './plugins/CorePlugin';  
 import { SocketPlugin } from './plugins/SocketPlugin';
-import { logger } from './utils/logger';
+import { logger } from './core/utils/logger';
 import { LLMPlugin } from './plugins/LLMPlugin';
 import minimist from 'minimist';
 import { SlashCommandPlugin } from './plugins/SlashCommandPlugin';
 import { ShellCommandPlugin } from './plugins/ShellCommandPlugin';
-import { ChatPipeline } from './agent/pipelines/ChatPipeline';
-import { AgentPipeline } from './agent/pipelines/AgentPipeline';
+import { ChatPipeline } from './pipelines/ChatPipeline';
+import { AgentPipeline } from './pipelines/AgentPipeline';
 import * as path from 'path';
 
 const log = logger.child('main');
@@ -34,7 +34,6 @@ async function createAgent(configDir: string): Promise<Agent> {
 async function setupAgent(agent: Agent, defaultMode: string = 'default'): Promise<void> {
   await agent.init();
 
-  // Example of registering an extension:
   // agent.registerExtension("credentials", new GatewayCredentialClient());
 
   agent.registerMode("chat", new ChatPipeline());

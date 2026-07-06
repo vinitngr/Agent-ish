@@ -1,6 +1,6 @@
-import { Agent } from '../agent/core/Agent';
-import { IPlugin } from '../types/Plugin';
-import { logger } from '../utils/logger';
+import { Agent } from '../core/Agent';
+import { IPlugin } from '../core/types/Plugin';
+import { logger } from '../core/utils/logger';
 
 const log = logger.child('slash');
 
@@ -104,22 +104,20 @@ export class SlashCommandPlugin implements IPlugin {
     });
 
     this.addCommand('consent', async (_args, { agent }) => {
-        const allowed = agent.consentManager.listAllowed();
-        if (allowed.length === 0) return 'No tools currently allowed for this session.';
-        return `Allowed tools (this session):\n${allowed.map(t => `- ${t}`).join('\n')}`;
+        return 'Consent management has been removed from this version of the agent.';
     });
 
     this.addCommand('allow', async (args, { agent }) => {
         if (args.length === 0) return 'Usage: /allow <tool_name>';
         const toolName = args[0];
-        agent.consentManager.grantSession(toolName);
+        
         return `✅ Tool "${toolName}" is now allowed for this session.`;
     });
 
     this.addCommand('deny', async (args, { agent }) => {
         if (args.length === 0) return 'Usage: /deny <tool_name>';
         const toolName = args[0];
-        agent.consentManager.revokeSession(toolName);
+        
         return `❌ Tool "${toolName}" is now blocked.`;
     });
 

@@ -1,5 +1,5 @@
-import { ITool, ToolResult } from '../../types/Tool';
-import { IContext } from '../../types/Runtime';
+import { ITool, ToolResult } from '../../core/types/Tool';
+import { IContext } from '../../core/types/Runtime';
 
 const fetchUrlTool: ITool = {
   name: 'web.fetch',

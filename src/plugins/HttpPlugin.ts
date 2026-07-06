@@ -1,5 +1,5 @@
-import { Agent } from '../agent/core/Agent';
-import { IPlugin } from '../types/Plugin';
+import { Agent } from '../core/Agent';
+import { IPlugin } from '../core/types/Plugin';
 import { HttpInterface } from '../interfaces/HttpInterface';
 
 export class HttpPlugin implements IPlugin {

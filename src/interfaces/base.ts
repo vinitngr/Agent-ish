@@ -1,5 +1,5 @@
-import { IContext, IInterface } from "../types/Runtime";
-import { logger } from "@utils/logger";
+import { IContext, IInterface } from "../core/types/Runtime";
+import { logger } from "../core/utils/logger";
 
 export abstract class BaseInterface implements IInterface {
   abstract name: string;

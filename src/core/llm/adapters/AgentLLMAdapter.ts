@@ -1,4 +1,4 @@
-import { ILLMProvider, LLMMessage, LLMResponse, LLMRequestOptions, ProviderConfig } from '../../../types/Provider';
+import { ILLMProvider, LLMMessage, LLMResponse, LLMRequestOptions, ProviderConfig } from '../../types/Provider';
 import { LLMService, CompletionRequest } from '..';
 
 export class AgentLLMAdapter implements ILLMProvider {

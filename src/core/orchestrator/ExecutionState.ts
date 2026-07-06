@@ -1,5 +1,5 @@
-import { SessionMessage } from '../../types/Runtime';
-import { Session } from '../../agent/runtime/Session';
+import { SessionMessage } from '../types/Runtime';
+import { Session } from '../runtime/Session';
 
 export class ExecutionState {
   id: string = '';

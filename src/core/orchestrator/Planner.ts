@@ -1,5 +1,5 @@
-import { Session } from '../../agent/runtime/Session';
-import { ToolCall } from '../../types/Provider';
+import { Session } from '../runtime/Session';
+import { ToolCall } from '../types/Provider';
 
 export type PlanResult =
   | { kind: 'action'; toolCalls: ToolCall[] }

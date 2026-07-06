@@ -1,10 +1,10 @@
-import { Context } from '../../agent/runtime/Context';
-import { Session } from '../../agent/runtime/Session';
+import { Context } from '../runtime/Context';
+import { Session } from '../runtime/Session';
 import { IPlanner, PlanResult } from './Planner';
-import { PlannerConfig } from '../../types/AgentConfig';
-import { LLMMessage } from '../../types/Provider';
-import { logger } from '../../utils/logger';
-import { EventBus, AgentEvents } from '../../utils/events';
+import { PlannerConfig } from '../types/AgentConfig';
+import { LLMMessage } from '../types/Provider';
+import { logger } from '../utils/logger';
+import { EventBus, AgentEvents } from '../utils/events';
 
 const log = logger.child('llm-planner');
 
@@ -32,7 +32,13 @@ export class LLMPlanner implements IPlanner {
 
     try {
       const messages = this.buildMessages(session);
-      const tools = this.context.tools.getAll();
+      let tools = this.context.tools.getAll();
+      const allowedTools = session.metadata?.allowedTools as string[] | undefined;
+      
+      if (allowedTools) {
+        tools = tools.filter(t => allowedTools.includes(t.name));
+        log.debug(`Filtered tools to allowed list: ${allowedTools.join(', ')}`);
+      }
       
       const toolDefs = tools.map((t) => ({
         name: t.name,

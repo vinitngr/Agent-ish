@@ -1,4 +1,4 @@
-import { ToolExecutionHistory, ToolExecutionRecord } from '../../../agent/history/ToolExecutionHistory';
+import { ToolExecutionHistory, ToolExecutionRecord } from '../history/ToolExecutionHistory';
 
 const DIM = '\x1b[2m';
 const BOLD = '\x1b[1m';

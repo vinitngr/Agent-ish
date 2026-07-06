@@ -1,4 +1,4 @@
-import { IContext } from '../../../types/Runtime';
+import { IContext } from '../../../core/types/Runtime';
 
 export interface SlashCommand {
   name: string;
